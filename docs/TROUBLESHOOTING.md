@@ -1,6 +1,6 @@
 # Security Gate — Troubleshooting (MCP, hooks, smoke)
 
-Use this when something “should work” after [`SETUP.md`](../SETUP.md). Keep [`VIBECODER_QUICKSTART.md`](VIBECODER_QUICKSTART.md) open for the happy path.
+Use this when something “should work” after [`SETUP.md`](../SETUP.md). Keep [`VIBECODER_QUICKSTART.md`](VIBECODER_QUICKSTART.md) open for the happy path. **Conceptual “why” questions** (not broken installs): [`FAQ.md`](FAQ.md).
 
 ---
 

@@ -1,5 +1,7 @@
 # Security Gate — Vibecoder Quickstart (English)
 
+**Big picture (diagrams + flows):** start with [`ARCHITECTURE_AND_FLOWS.md`](ARCHITECTURE_AND_FLOWS.md); quick questions → [`FAQ.md`](FAQ.md).
+
 This path is for builders who want **simple steps** and **plain language**. It works on **macOS**, **Windows**, and **Linux** — install steps differ slightly; see `SETUP.md` for copy-paste commands per OS.
 
 ## What you get

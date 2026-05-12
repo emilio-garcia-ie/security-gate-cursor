@@ -1,20 +1,128 @@
 # Security Gate (Cursor Plugin)
 
-Security Gate is a **hackathon-ready** Cursor plugin template that implements a **three-layer security workflow**:
+Security Gate is a **hackathon-ready** Cursor plugin: **rules** before code, **evidence-grounded planning**, and an **MCP server** that coordinates Semgrep, intel feeds, optional labs, and Tier-2/3 tools — with a **production handbrake** so dynamic testing is never encouraged against production-like environments.
 
-1. **Layer 1 — Rules**: Cursor rules (`.mdc`) steer secure defaults *before* code is written.
-2. **Layer 2 — Planning**: an evidence-first planning rule asks for top risks *with grounding* from a local intel snapshot (when available).
-3. **Layer 3 — Orchestration**: an MCP server provides **`handbrake_scan`**, **`project_profile`**, **`intel_refresh`**, **`layer2_brief`**, **`lab_bootstrap`**, **`deepsec_review`**, **`shannon_pentest`**, and **`llamafirewall_advisor`**, and is designed to **block dynamic testing** when production-like environment signals are detected.
+### Where to read next
 
-> **Tool integration matrix** (real, not aspirational; canonical env names: [`docs/LLM_AND_KEYS_MATRIX.md`](docs/LLM_AND_KEYS_MATRIX.md)):
-> - **Semgrep Community Edition** — exposed via the bundled `semgrep_scan` MCP tool. Host install recommended (`brew install semgrep` / `pip install semgrep`); falls back to `semgrep/semgrep:latest` Docker if no host binary is found. Do **not** wire `semgrep mcp` as a separate MCP server — that subcommand requires the paid Pro Engine.
-> - **Crucible** — `lab_bootstrap` `crucible-lab` Docker service (`pip install crucible-security` inside the image). Requires `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GROQ_API_KEY`.
-> - **Shannon** (KeygraphHQ, Tier-2 dynamic web/API pentest) — host wrapper **`shannon_pentest`**. Requires Docker + Node 18+ + Anthropic-compatible credentials. Never auto-runs.
-> - **DeepSec** (Vercel Labs, Tier-3 deep review) — host wrapper **`deepsec_review`**. Requires Node 22+ + pnpm + one of `AI_GATEWAY_API_KEY` / `VERCEL_OIDC_TOKEN` / `ANTHROPIC_AUTH_TOKEN`.
-> - **LlamaFirewall** (Meta, Tier-2.5 runtime defense) — **advisor** wrapper **`llamafirewall_advisor`** that detects setup and returns an installable Python snippet. LlamaFirewall itself lives **inside your agent code**, not in Security Gate.
-> - **Free vs paid LLMs:** see [`docs/FREE_VS_PAID_LLM.md`](docs/FREE_VS_PAID_LLM.md) for Ollama / Gemini / OpenRouter free / Groq free / Anthropic paid trade-offs.
->
-> Host installs of Docker / Node 22 / pnpm / Python are still the user's responsibility; every MCP tool returns a copy-paste install plan when something is missing.
+| Goal | Document |
+|------|------------|
+| **Diagrams, flows, outputs per tool** | **[docs/ARCHITECTURE_AND_FLOWS.md](docs/ARCHITECTURE_AND_FLOWS.md)** |
+| **Short Q&A** (what / why / keys) | **[docs/FAQ.md](docs/FAQ.md)** |
+| **Install + smoke tests** | **[SETUP.md](SETUP.md)** |
+| **Breakages** (MCP, Docker, ports) | **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** |
+| **Env var matrix** | **[docs/LLM_AND_KEYS_MATRIX.md](docs/LLM_AND_KEYS_MATRIX.md)** |
+| **Free vs paid LLM paths** | **[docs/FREE_VS_PAID_LLM.md](docs/FREE_VS_PAID_LLM.md)** |
+
+---
+
+## The three layers
+
+```mermaid
+flowchart TB
+  subgraph L1 ["Layer_1_Rules"]
+    R["Cursor_mdc_rules_plus_skill"]
+  end
+  subgraph L2 ["Layer_2_Planning"]
+    PL["security_planning_mdc"]
+    IN["intel_refresh_and_layer2_brief"]
+  end
+  subgraph L3 ["Layer_3_Orchestration_MCP"]
+    HB["handbrake_scan"]
+    TO["profile_Semgrep_lab_Shannon_DeepSec_llamafirewall"]
+  end
+  L1 --> L2
+  L2 --> L3
+  HB --> TO
+```
+
+- **Layer 1 — Rules:** `.mdc` rules steer secure defaults *before* code is written.  
+- **Layer 2 — Planning:** an evidence-first planning rule plus **`intel_refresh`** / **`layer2_brief`** (KEV/OSV cache when populated).  
+- **Layer 3 — Orchestration:** MCP tools — **`handbrake_scan`**, **`project_profile`**, **`intel_refresh`**, **`layer2_brief`**, **`lab_bootstrap`**, **`semgrep_scan`**, **`deepsec_review`**, **`shannon_pentest`**, **`llamafirewall_advisor`** — designed to **block dynamic testing** when production-like signals appear.
+
+---
+
+## Static vs dynamic (and where AI-backed tools fit)
+
+| Path | What runs | Typical API keys | Handbrake |
+|------|-----------|------------------|-----------|
+| **Tier 1 — static** | Rules, `project_profile`, `intel_refresh`, `layer2_brief`, **`semgrep_scan`**, `llamafirewall_advisor` (advisor text) | **None** for core intel + OSS Semgrep | Still run before *recommending* dynamic work |
+| **Tier 2/3 — dynamic + LLM** | `shannon_pentest`, Crucible via **`lab_bootstrap`**, **`deepsec_review`** scan | **Required** when those actions call a vendor LLM | **`dynamic_allowed: true`** and **disposable** targets only |
+
+“AI” in Tier 2/3 means **Shannon / Crucible / DeepSec backends** — not the Cursor chat model. Tier 1 can stay **keyless** for the bundled OSS path.
+
+```mermaid
+flowchart TB
+  WS["Workspace"]
+  WS --> PP["project_profile"]
+  PP --> HB["handbrake_scan"]
+  HB --> ST["Tier_1_static_Semgrep_intel"]
+  HB -->|dynamic_allowed| DY["Tier_2_3_Shannon_Crucible_DeepSec"]
+  HB -->|blocked| BL["No_live_exploit_guidance"]
+```
+
+---
+
+## Typical flow: tools → outputs
+
+```mermaid
+flowchart LR
+  subgraph In ["Workspace"]
+    F["Files_and_env"]
+  end
+  subgraph MCP ["MCP_security_gate"]
+    T["Tool_calls"]
+  end
+  subgraph Out ["Artifacts"]
+    J["JSON_or_markdown_in_chat"]
+    C[".security-gate_cache"]
+    R["reports_export_CLI"]
+  end
+  F --> T --> J
+  T --> C
+  T --> R
+```
+
+| Output | Examples |
+|--------|----------|
+| In chat | JSON from `handbrake_scan`, markdown from `layer2_brief`, Semgrep summaries |
+| Cache | `.security-gate/cache/*.json` from **`intel_refresh`** |
+| Reports | **`npm run report:export`** → `FINAL_SECURITY_REPORT_*.md` ([template](docs/templates/FINAL_SECURITY_REPORT.template.md)) |
+| Tool dirs | `.deepsec/`, `.shannon/`, Docker lab bind-mount |
+
+---
+
+## Tools at a glance (official links; no bundled logos)
+
+| Layer | Integration | Cost (typical) | Reference |
+|:-----:|-------------|----------------|-----------|
+| 1–2 | Cursor rules + planning | Bundled with plugin | — |
+| 2–3 | **Semgrep** CE via `semgrep_scan` | Free (host or Docker CE) | [Semgrep docs](https://semgrep.dev/docs) |
+| 2 | **CISA KEV** + **OSV** | Free (HTTPS) | [KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog), [OSV](https://osv.dev/) |
+| 3 | **Shannon** | Paid / free-tier proxies — [FREE_VS_PAID_LLM.md](docs/FREE_VS_PAID_LLM.md) | [Keygraph Shannon](https://github.com/KeygraphHQ/shannon) |
+| 3 | **Crucible** | LLM keys; Groq free tier possible | [Crucible](https://github.com/crucible-security/crucible) |
+| 3 | **DeepSec** | Paid AI — calibrate `limit` | [DeepSec](https://github.com/vercel-labs/deepsec) |
+| 3 | **LlamaFirewall** advisor | Core path free (local HF) | [LlamaFirewall](https://github.com/meta-llama/PurpleLlama/tree/main/LlamaFirewall) |
+
+> **Semgrep:** do **not** wire the separate `semgrep mcp` MCP entry — it requires Semgrep’s **Pro Engine** (paid). This repo ships **`semgrep_scan`** (OSS CE + Docker fallback). More: [docs/ARCHITECTURE_AND_FLOWS.md#visual-assets-policy](docs/ARCHITECTURE_AND_FLOWS.md#visual-assets-policy) and [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+
+Host installs of Docker / Node 22 / pnpm / Python remain your responsibility; MCP tools return **install_plan** JSON when prerequisites are missing.
+
+---
+
+## Decision flow (profile + handbrake)
+
+```mermaid
+flowchart TB
+  start["Open_workspace"] --> prof["project_profile"]
+  prof --> hb["handbrake_scan"]
+  hb --> branch{"dynamic_allowed"}
+  branch -->|false| t1only["Tier_1_only_recommendations"]
+  branch -->|true| t1plus["Tier_1_plus_optional_dynamic_on_disposable_targets"]
+```
+
+**Mandatory ordering:** always run **`handbrake_scan`** before live exploit testing or autonomous red teaming.
+
+---
 
 ## Supported platforms
 
@@ -24,39 +132,6 @@ Security Gate is intended to work on **macOS**, **Windows 10/11**, and **Linux**
 - **Hooks**: `hooks/hooks.json` invokes `node ./hooks/session-hint.mjs` — ensure **Node** is on `PATH` in Cursor’s environment on every OS.
 - **Docker**: use **Docker Desktop** on macOS and Windows; **Docker Engine + Compose plugin** on Linux. Bind mounts for the scanner lab require Docker to share the drive that holds your workspace (default on macOS; enable WSL2/file sharing on Windows per Docker docs).
 - **Demo clones**: use **`npm run clone-demo-targets`** at the repo root (cross-platform) or `./scripts/clone-demo-targets.sh` on macOS/Linux with Bash.
-
-## Decision flow (centerpiece)
-
-```
-                    +-------------------+
-                    | Open workspace    |
-                    +---------+---------+
-                              |
-                              v
-                    +-------------------+
-                    | project_profile   |
-                    | (stack signals)   |
-                    +---------+---------+
-                              |
-                              v
-                    +-------------------+
-                    | handbrake_scan    |
-                    | (prod signals)    |
-                    +---------+---------+
-                              |
-               +--------------+--------------+
-               |                             |
-               v                             v
-   dynamic_allowed = false          dynamic_allowed = true
-   (block Tier 2/3 dynamic)        (disposable env only)
-               |                             |
-               v                             v
-        Tier 1 static only              Tier 1 static
-        (e.g., Semgrep)               + optional dynamic
-                                      (Shannon / Crucible)
-```
-
-**Mandatory ordering**: always run **`handbrake_scan`** before attempting any live exploit testing or autonomous red teaming.
 
 ## Quick start (developers)
 
@@ -165,6 +240,8 @@ docker compose down -v
 
 ## MCP tools (what the server does today)
 
+Per-tool **outputs and on-disk paths** are summarized in [`docs/ARCHITECTURE_AND_FLOWS.md`](docs/ARCHITECTURE_AND_FLOWS.md). The table below is the full in-repo reference.
+
 | Tool | Purpose |
 |------|---------|
 | `handbrake_scan` | Detect production-like environment signals from **process env + workspace `.env*` files**. Blocks dynamic testing recommendations when triggered. |
@@ -246,6 +323,9 @@ This is **evidence support**, not certification or conformance. Use it as a star
 
 ## Documentation map
 
+- **Architecture, diagrams, outputs:** [`docs/ARCHITECTURE_AND_FLOWS.md`](docs/ARCHITECTURE_AND_FLOWS.md)
+- **Conceptual FAQ:** [`docs/FAQ.md`](docs/FAQ.md)
+- **Optional first-party images:** [`docs/assets/README.md`](docs/assets/README.md)
 - **Where to put every setting (paths + order):** [`docs/CONFIGURATION_MAP.md`](docs/CONFIGURATION_MAP.md)
 - **OWASP & ISO 27001 mapping (qualitative):** [`docs/STANDARDS_MAPPING.md`](docs/STANDARDS_MAPPING.md)
 - **Free vs paid LLM choices:** [`docs/FREE_VS_PAID_LLM.md`](docs/FREE_VS_PAID_LLM.md)
