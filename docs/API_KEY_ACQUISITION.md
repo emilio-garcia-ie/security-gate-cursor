@@ -27,7 +27,7 @@ The official **`semgrep mcp`** subcommand requires Semgrep's **Pro Engine** (pai
 | Tool | API key required? | Where to get it | Typical cost | Environment variable(s) |
 |------|-------------------|-------------------|--------------|-------------------------|
 | **Semgrep OSS (Community Edition)** | No | Install locally — [Semgrep docs](https://semgrep.dev/docs) (`brew install semgrep` / `pip install semgrep`); or rely on the Docker fallback inside `semgrep_scan` / the `semgrep/semgrep:latest` image used by `lab_bootstrap` | Free | N/A |
-| **Semgrep Pro (`semgrep mcp` subcommand)** | Yes (paid) | [Semgrep AppSec Platform](https://semgrep.com/products/community-edition) — Pro Engine binary required by the `mcp` subcommand | Paid plan | N/A (license is bound to the binary, not an env var) |
+| **Semgrep Pro (`semgrep mcp` subcommand)** | Yes (paid) | [Semgrep pricing / AppSec Platform](https://semgrep.dev/pricing) — Pro Engine binary required by the `mcp` subcommand (not Community Edition) | Paid plan | N/A (license is bound to the binary, not an env var) |
 | **OSV** | No | Public API — [OSV](https://osv.dev/) | Free | N/A |
 | **CISA KEV** | No | Public JSON feed — [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Free | N/A |
 | **NVD** | Optional (for *your* integrations or a future Security Gate build) | [Request NVD API key](https://nvd.nist.gov/developers/request-an-api-key) | Free | `NVD_API_KEY` (not read by the current MVP server) |
