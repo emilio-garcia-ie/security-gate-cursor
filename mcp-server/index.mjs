@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Security Gate MCP server
- * Tools: handbrake_scan, project_profile, intel_refresh, layer2_brief, lab_bootstrap
+ * Tools: handbrake_scan, project_profile, intel_refresh, layer2_brief, lab_bootstrap,
+ *        deepsec_review, shannon_pentest, llamafirewall_advisor, semgrep_scan
  */
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -10,25 +11,14 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import * as z from "zod";
 import { runLabAction, startupSummaryLine } from "./lib/lab-bootstrap.mjs";
+import { runDeepSecAction } from "./lib/deepsec.mjs";
+import { runShannonAction } from "./lib/shannon.mjs";
+import { runLlamaFirewallAction } from "./lib/llamafirewall-advisor.mjs";
+import { runSemgrepAction } from "./lib/semgrep-scan.mjs";
+import { runHandbrakeScan } from "./lib/handbrake.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PLUGIN_ROOT = path.resolve(__dirname, "..");
-
-const BLOCK_MESSAGE =
-  "Production environment detected. Live exploit testing has been disabled to protect your data. Only static analysis (Tier 1) is available.";
-
-const DEV_DB_HOST_ALLOWLIST = new Set([
-  "localhost",
-  "127.0.0.1",
-  "::1",
-  "host.docker.internal",
-  "mysql",
-  "postgres",
-  "mongo",
-  "mariadb",
-  "db",
-  "redis"
-]);
 
 function resolveWorkspaceRoot(input) {
   const fromArg = input?.workspaceRoot?.trim();
@@ -54,116 +44,6 @@ async function readTextIfExists(p) {
   } catch {
     return "";
   }
-}
-
-function parseDotEnv(text) {
-  const out = {};
-  for (const line of text.split(/\r?\n/)) {
-    const t = line.trim();
-    if (!t || t.startsWith("#")) continue;
-    const eq = t.indexOf("=");
-    if (eq === -1) continue;
-    const key = t.slice(0, eq).trim();
-    let val = t.slice(eq + 1).trim();
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-      val = val.slice(1, -1);
-    }
-    out[key] = val;
-  }
-  return out;
-}
-
-async function loadWorkspaceEnvFiles(root) {
-  const names = [".env", ".env.local", ".env.production", ".env.production.local", ".env.development.local"];
-  const merged = {};
-  for (const n of names) {
-    const p = path.join(root, n);
-    const txt = await readTextIfExists(p);
-    if (!txt) continue;
-    Object.assign(merged, parseDotEnv(txt));
-  }
-  return merged;
-}
-
-function mergeEnv(fileEnv) {
-  return { ...fileEnv, ...process.env };
-}
-
-function normalizeHost(host) {
-  if (!host) return "";
-  return host.toLowerCase().replace(/^\[|\]$/g, "");
-}
-
-function tryParseDbHost(databaseUrl) {
-  if (!databaseUrl) return { host: "", dbName: "" };
-  const u = databaseUrl.trim();
-  try {
-    const url = new URL(u.replace(/^jdbc:/, ""));
-    return {
-      host: normalizeHost(url.hostname),
-      dbName: (url.pathname || "").replace(/^\//, "").split("/")[0] || ""
-    };
-  } catch {
-    const mHost = u.match(/@([^/:?]+)(?::\d+)?(?:\/|$|\?)/);
-    const mDb = u.match(/\/([^/?]+)(?:\?|$)/);
-    return {
-      host: normalizeHost(mHost?.[1] || ""),
-      dbName: mDb?.[1] || ""
-    };
-  }
-}
-
-function looksLikeProdDbName(name) {
-  if (!name) return false;
-  const n = name.toLowerCase();
-  // "prod"/"production" matched anywhere: guardrail prefers false-positives over misses
-  // (e.g., "myappprod", "app_prod_v2", "prod1" must all be blocked).
-  if (/prod(uction)?/.test(n)) return true;
-  // "live" must be separator-bounded to avoid matching unrelated words like
-  // "alive", "delivery", "relive".
-  if (/(^|[-_])live($|[-_])/.test(n)) return true;
-  // main-db / main_db / maindb / mainDB (lowercased).
-  if (/main[-_]?db/.test(n)) return true;
-  return false;
-}
-
-function productionHandbrake(env) {
-  const reasons = [];
-  const e = (k) => (env[k] ?? "").toString().trim();
-
-  if (/^production$/i.test(e("NODE_ENV"))) reasons.push("NODE_ENV is production");
-  if (/^prod(uction)?$/i.test(e("ENV"))) reasons.push("ENV indicates production");
-  if (/^production$/i.test(e("RAILS_ENV"))) reasons.push("RAILS_ENV is production");
-  if (/^true$/i.test(e("PRODUCTION"))) reasons.push("PRODUCTION is true");
-
-  const dbUrl = e("DATABASE_URL") || e("DB_URL") || e("MYSQL_URL") || e("POSTGRES_URL");
-  if (dbUrl) {
-    const { host, dbName } = tryParseDbHost(dbUrl);
-    if (host && !DEV_DB_HOST_ALLOWLIST.has(host)) {
-      reasons.push(`Database host "${host}" is not in the local/dev allowlist`);
-    }
-    if (looksLikeProdDbName(dbName)) {
-      reasons.push(`Database name "${dbName}" looks production-like`);
-    }
-  }
-
-  const dynamicAllowed = reasons.length === 0;
-  return {
-    dynamic_allowed: dynamicAllowed,
-    tier1_static_allowed: true,
-    user_message: dynamicAllowed ? "" : BLOCK_MESSAGE,
-    reasons,
-    scanned_keys: [
-      "NODE_ENV",
-      "ENV",
-      "RAILS_ENV",
-      "PRODUCTION",
-      "DATABASE_URL",
-      "DB_URL",
-      "MYSQL_URL",
-      "POSTGRES_URL"
-    ]
-  };
 }
 
 async function readJsonIfExists(p) {
@@ -403,7 +283,7 @@ async function layer2Brief(root, { featureSummary = "" } = {}) {
   return lines.join("\n");
 }
 
-const server = new McpServer({ name: "security-gate", version: "0.1.1" });
+const server = new McpServer({ name: "security-gate", version: "0.3.1" });
 
 server.tool(
   "handbrake_scan",
@@ -413,10 +293,8 @@ server.tool(
   },
   async (args) => {
     const root = resolveWorkspaceRoot(args);
-    const fileEnv = await loadWorkspaceEnvFiles(root);
-    const merged = mergeEnv(fileEnv);
-    const result = productionHandbrake(merged);
-    const text = JSON.stringify({ workspaceRoot: root, ...result }, null, 2);
+    const result = await runHandbrakeScan(root);
+    const text = JSON.stringify(result, null, 2);
     return { content: [{ type: "text", text }] };
   }
 );
@@ -467,6 +345,122 @@ server.tool(
     const root = resolveWorkspaceRoot(args);
     const md = await layer2Brief(root, { featureSummary: args.featureSummary || "" });
     return { content: [{ type: "text", text: md }] };
+  }
+);
+
+server.tool(
+  "deepsec_review",
+  "Tier-3 deep review (Vercel Labs DeepSec) host wrapper. Detects Node 22+, pnpm, .deepsec/ scaffold and credentials (AI_GATEWAY_API_KEY / VERCEL_OIDC_TOKEN / ANTHROPIC_AUTH_TOKEN). Never auto-runs scans; the caller must pass action=scan explicitly. Default scan limit is conservative (50) to keep cost bounded.",
+  {
+    action: z
+      .enum(["status", "install_plan", "init", "scan", "report"])
+      .optional()
+      .default("status")
+      .describe(
+        "status = detection only; install_plan = copy-paste install hints; init = scaffold .deepsec/; scan = pnpm deepsec scan + process; report = export markdown findings"
+      ),
+    workspaceRoot: z
+      .string()
+      .optional()
+      .describe("Workspace where DeepSec scaffolds .deepsec/ (defaults to cwd or SECURITY_GATE_WORKSPACE)"),
+    limit: z
+      .number()
+      .int()
+      .positive()
+      .max(500)
+      .optional()
+      .describe("Files to include in `pnpm deepsec scan --limit`. Default 50 (calibration). Max 500.")
+  },
+  async (args) => {
+    const workspaceRoot = resolveWorkspaceRoot(args);
+    const action = args.action ?? "status";
+    const limit = args.limit;
+    const payload = runDeepSecAction({ workspaceRoot, action, limit });
+    return { content: [{ type: "text", text: JSON.stringify(payload, null, 2) }] };
+  }
+);
+
+server.tool(
+  "semgrep_scan",
+  "OSS Semgrep wrapper (Community Edition). Bundled inside Security Gate because the official `ghcr.io/semgrep/mcp` server was deprecated in Semgrep v0.9.0 (now only exposes a `deprecation_notice` tool) and the `semgrep mcp` subcommand requires the proprietary Pro Engine. Resolution order: host `semgrep` binary first, Docker `semgrep/semgrep:latest` fallback. Exit code 0 = no findings, exit code 1 = findings present — both are treated as success. Use for the workspace rule that pre-flights generated code with Semgrep.",
+  {
+    action: z
+      .enum(["status", "scan_path", "scan_text"])
+      .optional()
+      .default("status")
+      .describe("status = engine detection; scan_path = scan a file or directory; scan_text = scan an inline snippet (writes a tempfile)"),
+    workspaceRoot: z.string().optional().describe("Workspace root used as default scan target when target_path is omitted"),
+    target_path: z.string().optional().describe("File or directory to scan (defaults to workspaceRoot). Must contain ≤ 5000 files."),
+    config: z.string().optional().describe("Semgrep --config value (default `p/ci`). Examples: `p/ci`, `p/owasp-top-ten`, `p/r2c-security-audit`, `p/python`, `p/javascript`. The Semgrep `auto` config requires metrics opt-in and we honor that automatically when you pass it explicitly."),
+    extra_args: z.array(z.string()).optional().describe("Extra args appended after --json (use sparingly; the wrapper already passes --quiet --metrics=off)."),
+    snippet: z.string().optional().describe("Inline code to scan (only with action=scan_text). Max 200 KB."),
+    language: z
+      .enum(["javascript", "typescript", "python", "go", "java", "ruby", "php", "c", "cpp", "csharp", "kotlin", "rust"])
+      .optional()
+      .describe("Language hint for scan_text — controls the tempfile extension Semgrep uses to pick rules.")
+  },
+  async (args) => {
+    const workspaceRoot = resolveWorkspaceRoot(args);
+    const action = args.action ?? "status";
+    const payload = runSemgrepAction({
+      action,
+      workspaceRoot,
+      target_path: args.target_path,
+      config: args.config,
+      extra_args: args.extra_args,
+      snippet: args.snippet,
+      language: args.language
+    });
+    return { content: [{ type: "text", text: JSON.stringify(payload, null, 2) }] };
+  }
+);
+
+server.tool(
+  "shannon_pentest",
+  "Tier-2 dynamic web/API pentest (KeygraphHQ Shannon) host wrapper. Detects Docker, Node 18+, Anthropic-compatible credentials, and classifies the target URL as disposable-or-not. Never auto-runs pentests; the caller must pass action=pentest with an explicit target_url. Anthropic-compatible proxies (OpenRouter, Vercel AI Gateway) supported via ANTHROPIC_AUTH_TOKEN + ANTHROPIC_BASE_URL.",
+  {
+    action: z
+      .enum(["status", "install_plan", "setup", "pentest", "report"])
+      .optional()
+      .default("status")
+      .describe(
+        "status = detection only; install_plan = copy-paste install hints; setup = npx @keygraph/shannon setup; pentest = npx @keygraph/shannon start (gated); report = list Shannon output files"
+      ),
+    workspaceRoot: z.string().optional().describe("Workspace (defaults to cwd or SECURITY_GATE_WORKSPACE)"),
+    target_url: z.string().optional().describe("Pentest target URL. Must point to a disposable / containerized environment."),
+    repo_path: z.string().optional().describe("Path to the source repo Shannon should analyze (defaults to workspaceRoot)."),
+    dryRun: z.boolean().optional().describe("When true with action=pentest, returns the planned command without spawning it.")
+  },
+  async (args) => {
+    const workspaceRoot = resolveWorkspaceRoot(args);
+    const action = args.action ?? "status";
+    const payload = runShannonAction({
+      workspaceRoot,
+      action,
+      targetUrl: args.target_url,
+      repoPath: args.repo_path,
+      dryRun: args.dryRun === true
+    });
+    return { content: [{ type: "text", text: JSON.stringify(payload, null, 2) }] };
+  }
+);
+
+server.tool(
+  "llamafirewall_advisor",
+  "Tier-2.5 runtime defense ADVISOR for Meta's LlamaFirewall (Python). Detects whether the workspace looks agentic, whether llamafirewall is already declared/importable, and returns an install plan + copy-paste Python snippet. NEVER installs anything and NEVER modifies user files — LlamaFirewall must live inside the user's agent process, not in Security Gate.",
+  {
+    action: z
+      .enum(["status", "install_plan", "snippet"])
+      .optional()
+      .default("status")
+      .describe("status = detection only; install_plan = Python 3.10+ + pip + venv steps; snippet = copy-paste integration code"),
+    workspaceRoot: z.string().optional().describe("Workspace (defaults to cwd or SECURITY_GATE_WORKSPACE)")
+  },
+  async (args) => {
+    const workspaceRoot = resolveWorkspaceRoot(args);
+    const action = args.action ?? "status";
+    const payload = runLlamaFirewallAction({ workspaceRoot, action });
+    return { content: [{ type: "text", text: JSON.stringify(payload, null, 2) }] };
   }
 );
 

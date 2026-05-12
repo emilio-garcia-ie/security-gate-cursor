@@ -43,3 +43,12 @@ Follow these constraints unless explicitly overridden with a documented risk acc
 ## When unsure
 
 - Prefer safer defaults, explicit validation, and narrow interfaces. If a shortcut increases risk, call it out and propose a safer alternative.
+
+## Standards reference (qualitative)
+
+When it adds clarity, tag the discussion with well-known frameworks:
+
+- **OWASP Top 10 (2021)** for web apps, **OWASP API Top 10 (2023)** for APIs, **OWASP Top 10 for LLM Applications** for LLM/agent code, and **OWASP Agentic AI** for autonomous agents.
+- **ISO/IEC 27001:2022 Annex A** — relevant technological controls include **A.8.8** (technical vulnerabilities), **A.8.25** (secure SDLC), **A.8.28** (secure coding), **A.8.29** (security testing), **A.8.31** (separation of environments).
+
+This is a **qualitative mapping**, not a certification. See [`docs/STANDARDS_MAPPING.md`](../docs/STANDARDS_MAPPING.md) for the full table.

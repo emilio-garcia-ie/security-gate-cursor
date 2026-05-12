@@ -1,0 +1,11 @@
+---
+description: After local onboard — API keys, canonical English docs, optional Spanish chat
+alwaysApply: true
+---
+
+# Security Gate — onboarding follow-up
+
+- Run `npm run onboard` from the repo root once per machine (see README).
+- For optional tools (Shannon, Crucible, DeepSec), use **exact env var names** from [docs/LLM_AND_KEYS_MATRIX.md](docs/LLM_AND_KEYS_MATRIX.md), [docs/API_KEY_ACQUISITION.md](docs/API_KEY_ACQUISITION.md), and [docs/FREE_VS_PAID_LLM.md](docs/FREE_VS_PAID_LLM.md). Never paste secrets into chat.
+- **Canonical documentation is English.** If the user writes in **Spanish**, reply in Spanish but keep **links and env var identifiers** in English as in the repo.
+- CLI Spanish is opt-in: `SECURITY_GATE_LOCALE=es` or `npm run onboard -- --locale=es`.

@@ -1,8 +1,8 @@
 {
   "name": "security-gate",
   "displayName": "Security Gate",
-  "version": "0.1.1",
-  "description": "Three-layer security for Cursor: rules, evidence-grounded planning, and orchestrated scans with a mandatory production safety handbrake before dynamic testing.",
+  "version": "0.3.2",
+  "description": "Three-layer security for Cursor: rules, evidence-grounded planning, and orchestrated scans (bundled OSS semgrep_scan + Crucible lab + Shannon Tier-2 + DeepSec Tier-3 + LlamaFirewall advisor) with a mandatory production safety handbrake before dynamic testing.",
   "author": {
     "name": "Security Gate contributors"
   },
@@ -13,6 +13,9 @@
     "security",
     "cursor-plugin",
     "owasp",
+    "owasp-top-10",
+    "owasp-llm-top-10",
+    "iso27001",
     "semgrep",
     "mcp",
     "supply-chain"

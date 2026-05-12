@@ -4,7 +4,12 @@
   "type": "module",
   "description": "Security Gate Cursor plugin — root scripts only; MCP server lives in mcp-server/.",
   "scripts": {
+    "onboard": "node scripts/onboard.mjs",
+    "report:export": "node scripts/export-final-report.mjs",
+    "benchmark:demo": "node scripts/benchmark-demo.mjs",
     "clone-demo-targets": "node scripts/clone-demo-targets.mjs",
+    "demo:webapp": "node scripts/demo-up.mjs webapp",
+    "demo:agent": "node scripts/demo-up.mjs agent",
     "demo:up": "node scripts/demo-up.mjs",
     "demo:down": "node scripts/demo-down.mjs"
   },

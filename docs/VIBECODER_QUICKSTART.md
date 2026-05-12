@@ -39,6 +39,16 @@ Copy-Item -Recurse -Force . "$env:USERPROFILE\.cursor\plugins\local\security-gat
 
 Then restart Cursor.
 
+## 1b) One-line setup (developers)
+
+From the cloned repo root:
+
+```bash
+npm run onboard
+```
+
+Use `--dry-run` to preview, `--locale=es` for Spanish messages, or `--keys` for optional API key hints. Full mapping: `docs/LLM_AND_KEYS_MATRIX.md`.
+
 ## 2) Turn on Node for the security helper
 
 The helper uses Node.js **18.18+**.
@@ -89,7 +99,7 @@ This keeps the risky app in a container (“digital cage”).
 
 ## 6) API keys (only if you use paid tools)
 
-If you later connect Shannon / Crucible / DeepSec / optional scanners, you will need API keys.
+If you later connect Shannon / Crucible / **DeepSec via `deepsec_review`** / optional scanners, you will need API keys. Security Gate's core flow (Layer 1 rules, `intel_refresh`, `layer2_brief`, `handbrake_scan`, `lab_bootstrap` Semgrep service) does **not** require any key.
 
 Start here:
 

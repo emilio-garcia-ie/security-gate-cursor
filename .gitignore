@@ -7,3 +7,5 @@ node_modules/
 dist/
 demo/
 .cursor/
+.security-gate/
+.deepsec/

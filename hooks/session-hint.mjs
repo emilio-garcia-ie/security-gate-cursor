@@ -26,8 +26,13 @@ async function main() {
 
   const hint =
     "Security Gate active. Run MCP tool `handbrake_scan` before any live exploit testing. " +
+    "Tier-1 static: bundled `semgrep_scan` (OSS Semgrep CE on host or Docker fallback — no Pro Engine, no extra MCP entry needed). " +
     "For an isolated Semgrep/Crucible lab in Docker, run MCP tool `lab_bootstrap` (see SETUP.md). " +
-    "Demo targets: run `npm run demo:up` from the Security Gate repo (auto free ports + URLs). Raw compose defaults: web 23000, agent 18501; override SECURITY_GATE_WEBAPP_PORT / SECURITY_GATE_AGENT_PORT.";
+    "Tier-2 dynamic web/API pentest: `shannon_pentest` (Docker + Node 18+ + Anthropic-compatible key — disposable targets only). " +
+    "Tier-2.5 runtime defense (Python agents): `llamafirewall_advisor` (advisor only; never executes). " +
+    "Tier-3 deep review: `deepsec_review` — start with action=status, never skip the default limit. " +
+    "Free vs paid LLM trade-offs: see docs/FREE_VS_PAID_LLM.md. " +
+    "Demo targets (one at a time): `npm run demo:webapp` or `npm run demo:agent` (auto free ports + URLs). Stop one: `npm run demo:down -- webapp|agent`. Raw compose defaults: web 23000, agent 18501; override SECURITY_GATE_WEBAPP_PORT / SECURITY_GATE_AGENT_PORT.";
 
   // Stderr is shown by Cursor when hooks emit diagnostics; it never corrupts
   // a JSON-RPC channel because hooks don't speak JSON-RPC on stdout.

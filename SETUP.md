@@ -7,7 +7,7 @@ This file has two audiences:
 
 > **TL;DR**: the plugin is **not self-installing**. The user must symlink (or copy) the plugin folder into Cursor's local plugins directory, reload Cursor, enable it in settings, and run `npm install` inside `mcp-server/`. After that, rules, hooks, and MCP tools work automatically.
 
-**First win (after Part A, steps 1–3):** `cd mcp-server && npm install && npm run smoke:all` — if that passes, Node + MCP code are healthy before you touch Cursor UI.
+**First win (after Part A, steps 1–3):** `cd mcp-server && npm install && npm run smoke:all` — if that passes, Node + MCP code are healthy before you touch Cursor UI. From the repo root you can also run **`npm run onboard`** (or `npm run onboard -- --dry-run`) for a guided install + symlink path; see **`docs/LLM_AND_KEYS_MATRIX.md`** for tool × credential mapping.
 
 **Supported OS:** **macOS**, **Windows 10/11**, and **Linux** — Node for MCP/hooks, Git for demo clones, and Docker Desktop (macOS/Windows) or Docker Engine + Compose v2 (Linux). The MCP tool **`lab_bootstrap`** returns install hints keyed as `darwin`, `windows`, or `linux`.
 
@@ -56,11 +56,13 @@ npm install
 npm run smoke:all
 ```
 
-All three sub-commands (`smoke`, `smoke:prod`, `smoke:aux`) must exit 0. This covers:
+The harness must exit 0. This covers:
 - MCP handshake + tool listing + `handbrake_scan`
 - Production handbrake matrix (clean, `NODE_ENV=production`, `ENV=prod`, `PRODUCTION=true`, non-local DB, localhost DB)
 - `looksLikeProdDbName` regressions (`myappprod`, `prod-db`, `mainDB`, `app_prod_v2` blocked; `staging-db`, `delivery-db` allowed)
 - `session-hint.mjs` hook behavior (neutral `{}` on stdout, hint on stderr)
+- **`smoke-onboard`**: `scripts/onboard.mjs --dry-run` succeeds (English locale)
+- **`smoke-report`**: `scripts/export-final-report.mjs` writes a markdown file with Handbrake / Semgrep / Executive summary sections
 
 Optional (requires **outbound HTTPS**, slower): `npm run smoke:intel` runs **`intel_refresh`** then **`layer2_brief`** in order over MCP stdio (uses the demo frontend workspace when `demo/cursor-webinar-sec/frontend` exists). To target another folder: `SECURITY_GATE_INTEL_WORKSPACE=/abs/path/to/project npm run smoke:intel` from `mcp-server/`.
 
@@ -159,9 +161,25 @@ Tear down when done:
 docker compose down -v
 ```
 
-### 8. External tools (optional — not bundled on the host)
+### 8. External tools (each wired through an MCP tool — host installs are user's job)
 
-Shannon, DeepSec, and LlamaFirewall are **not** vendored in this repo. For **Semgrep** and the **Crucible CLI** (`crucible-security` on PyPI), you can either install them on the host **or** start the isolated Docker lab via MCP **`lab_bootstrap`** (see **Scanner lab** below). Install anything else separately if you want the full demo script (`docs/DEMO_SCRIPT.md`).
+Every external scanner now has an MCP entry point. The plugin never installs privileged software for you; each tool's `action=install_plan` returns the copy-paste commands.
+
+| External tool | MCP entry point | Host prereqs | Credentials |
+|---------------|-----------------|--------------|-------------|
+| **Semgrep** (Tier 1) | **`semgrep_scan`** (bundled OSS wrapper) **and/or** `lab_bootstrap` `semgrep-lab` (Docker) | Host `semgrep` CE binary **or** Docker | None |
+| **Crucible** (Tier 2 agentic) | `lab_bootstrap` `crucible-lab` (Docker) | Docker | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GROQ_API_KEY` |
+| **Shannon** (Tier 2 web/API) | `shannon_pentest` (host wrapper around `npx @keygraph/shannon`) | Docker + Node 18+ | `ANTHROPIC_API_KEY` **or** `ANTHROPIC_AUTH_TOKEN` + `ANTHROPIC_BASE_URL` (OpenRouter / Vercel AI Gateway) |
+| **DeepSec** (Tier 3 deep review) | `deepsec_review` (host wrapper around `npx deepsec` + pnpm) | Node 22+, pnpm | `AI_GATEWAY_API_KEY` / `VERCEL_OIDC_TOKEN` / `ANTHROPIC_AUTH_TOKEN` (in `.deepsec/.env.local`) |
+| **LlamaFirewall** (Tier 2.5 runtime defense) | `llamafirewall_advisor` (read-only advisor) | Python 3.10+, pip, internet for HF model download | None for core; optional `TOGETHER_API_KEY` / `FIREWORKS_API_KEY` |
+
+For the free-vs-paid LLM picture across all four LLM-consuming tools (Shannon / DeepSec / Crucible / LlamaFirewall optional scanners), see [`docs/FREE_VS_PAID_LLM.md`](docs/FREE_VS_PAID_LLM.md).
+
+**About the official `semgrep mcp` / standalone OSS server (May 2026 reality check):**
+
+- The **`semgrep mcp` subcommand** built into the `semgrep` binary **requires the Pro Engine** (paid Semgrep AppSec Platform). On Community Edition you get: `MCP subcommand requires Pro Engine--make sure you are using the proprietary semgrep binary.`
+- The **standalone OSS server** `ghcr.io/semgrep/mcp` / PyPI `semgrep-mcp` was **deprecated** in Semgrep v0.9.0 (Sept 2025) and now only exposes a `deprecation_notice` tool — it cannot scan code.
+- That is why Security Gate **bundles its own `semgrep_scan` MCP tool** (`mcp-server/lib/semgrep-scan.mjs`) — a thin wrapper around the host **Semgrep Community Edition** binary with a Docker fallback (`semgrep/semgrep:latest`). It satisfies the workspace `semgrep_scan` rule out of the box, without requiring the Pro Engine or any separate MCP entry. Install Semgrep CE once on the host (`brew install semgrep` on macOS, or `pip install semgrep`) **or** rely on the Docker fallback — `semgrep_scan` action=`status` reports which engine it will use.
 
 ---
 
@@ -225,7 +243,7 @@ Here is a concise checklist you can share with users:
    - **Layer 1 rules** (`.mdc`) when they apply to edits in that workspace.
    - **Layer 2 rules** (`.mdc`) when planning risky features.
    - **`sessionStart` hook** (when Cursor loads the hook from the enabled plugin).
-   - **MCP tools** (`handbrake_scan`, `project_profile`, `intel_refresh`, `layer2_brief`, `lab_bootstrap`) when the MCP server started from step 7 (or from opening this repo with the default manifest).
+   - **MCP tools** (`handbrake_scan`, `project_profile`, `intel_refresh`, `layer2_brief`, `lab_bootstrap`, `deepsec_review`, `shannon_pentest`, `llamafirewall_advisor`) when the MCP server started from step 7 (or from opening this repo with the default manifest).
 
 ### What the plugin does automatically (no further action needed)
 
@@ -239,6 +257,9 @@ Here is a concise checklist you can share with users:
 | **`intel_refresh`** | Downloads CISA KEV JSON and queries OSV for up to **`maxPackages`** npm names from **`package.json`** (default 8). Writes `kev.json`, `intel-meta.json`, `osv-samples.json` under `.security-gate/cache/`. |
 | **`layer2_brief`** | Markdown brief: project profile + **KEV** summary (cached catalog) + **OSV** rows. MVP does **not** auto-join KEV to each OSV package. |
 | **`lab_bootstrap`** | Probes Docker/Python, prints an **install plan** when missing, and can `docker compose` the **scanner lab** (`docker-compose.lab.yml`). |
+| **`deepsec_review`** | Host wrapper for **Vercel Labs DeepSec** (Tier-3 deep review). Detects Node 22+, pnpm, `.deepsec/` scaffold, and credentials (`AI_GATEWAY_API_KEY` / `VERCEL_OIDC_TOKEN` / `ANTHROPIC_AUTH_TOKEN`). Actions: `status` / `install_plan` / `init` / `scan` (default `limit=50`) / `report`. Never auto-runs `scan`. |
+| **`shannon_pentest`** | Host wrapper for **KeygraphHQ Shannon** (Tier-2 dynamic web/API pentest). Detects Docker, Node 18+, Anthropic-compatible credentials, and classifies the `target_url` as disposable-or-not. Actions: `status` / `install_plan` / `setup` / `pentest` (gated, supports `dryRun`) / `report`. Refuses production-looking hostnames and missing credentials. |
+| **`llamafirewall_advisor`** | **Advisor** for **Meta LlamaFirewall** (Tier-2.5 runtime defense). Detects Python 3.10+, agentic signals, and `llamafirewall` declaration/import. Actions: `status` / `install_plan` / `snippet`. **Never installs or executes anything** — LlamaFirewall lives inside the user's agent process. |
 
 ### What the user still needs to handle themselves
 
@@ -251,8 +272,10 @@ Here is a concise checklist you can share with users:
 | Configuring MCP if `${workspaceFolder}` doesn't expand | User |
 | Docker demo targets | User (only for demos) |
 | Optional Semgrep/Crucible via Docker lab (`lab_bootstrap`) | User must install Docker Desktop / Engine first; MCP starts containers |
-| External tools (Shannon, DeepSec, host Semgrep, etc.) | User (not bundled) |
-| API keys for LLM providers or external tools | User |
+| Shannon Tier-2 pentest (`shannon_pentest`) | User installs Docker + Node 18+ and provides Anthropic-compatible credentials; MCP runs `npx @keygraph/shannon setup` / `start` on demand |
+| DeepSec Tier-3 review (`deepsec_review`) | User installs Node 22+, enables pnpm via corepack, places one credential in `.deepsec/.env.local`; MCP runs `npx deepsec init` / `pnpm deepsec scan` on demand |
+| LlamaFirewall Tier-2.5 runtime (`llamafirewall_advisor`) | User installs Python 3.10+, pip, and (optionally) `pip install llamafirewall`; MCP only **advises** and returns the integration snippet |
+| API keys for LLM providers or external tools | User (free + paid options documented in `docs/FREE_VS_PAID_LLM.md`) |
 
 ---
 

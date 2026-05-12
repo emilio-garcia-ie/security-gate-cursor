@@ -4,9 +4,17 @@ Security Gate is a **hackathon-ready** Cursor plugin template that implements a 
 
 1. **Layer 1 — Rules**: Cursor rules (`.mdc`) steer secure defaults *before* code is written.
 2. **Layer 2 — Planning**: an evidence-first planning rule asks for top risks *with grounding* from a local intel snapshot (when available).
-3. **Layer 3 — Orchestration**: an MCP server provides **`handbrake_scan`**, **`project_profile`**, **`intel_refresh`**, **`layer2_brief`**, and **`lab_bootstrap`**, and is designed to **block dynamic testing** when production-like environment signals are detected.
+3. **Layer 3 — Orchestration**: an MCP server provides **`handbrake_scan`**, **`project_profile`**, **`intel_refresh`**, **`layer2_brief`**, **`lab_bootstrap`**, **`deepsec_review`**, **`shannon_pentest`**, and **`llamafirewall_advisor`**, and is designed to **block dynamic testing** when production-like environment signals are detected.
 
-> **Important**: Shannon and DeepSec are **not vendored** inside this repository. For a closer “one-click” experience, **`lab_bootstrap`** can start an **isolated Docker Compose lab** that runs the official **Semgrep** image plus a small **Crucible (`crucible-security` on PyPI)** image built from this repo’s `docker/lab/crucible/Dockerfile`. Host installs of Docker/Python are still the user’s responsibility; the MCP tool returns copy-paste install plans when anything is missing.
+> **Tool integration matrix** (real, not aspirational; canonical env names: [`docs/LLM_AND_KEYS_MATRIX.md`](docs/LLM_AND_KEYS_MATRIX.md)):
+> - **Semgrep Community Edition** — exposed via the bundled `semgrep_scan` MCP tool. Host install recommended (`brew install semgrep` / `pip install semgrep`); falls back to `semgrep/semgrep:latest` Docker if no host binary is found. Do **not** wire `semgrep mcp` as a separate MCP server — that subcommand requires the paid Pro Engine.
+> - **Crucible** — `lab_bootstrap` `crucible-lab` Docker service (`pip install crucible-security` inside the image). Requires `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GROQ_API_KEY`.
+> - **Shannon** (KeygraphHQ, Tier-2 dynamic web/API pentest) — host wrapper **`shannon_pentest`**. Requires Docker + Node 18+ + Anthropic-compatible credentials. Never auto-runs.
+> - **DeepSec** (Vercel Labs, Tier-3 deep review) — host wrapper **`deepsec_review`**. Requires Node 22+ + pnpm + one of `AI_GATEWAY_API_KEY` / `VERCEL_OIDC_TOKEN` / `ANTHROPIC_AUTH_TOKEN`.
+> - **LlamaFirewall** (Meta, Tier-2.5 runtime defense) — **advisor** wrapper **`llamafirewall_advisor`** that detects setup and returns an installable Python snippet. LlamaFirewall itself lives **inside your agent code**, not in Security Gate.
+> - **Free vs paid LLMs:** see [`docs/FREE_VS_PAID_LLM.md`](docs/FREE_VS_PAID_LLM.md) for Ollama / Gemini / OpenRouter free / Groq free / Anthropic paid trade-offs.
+>
+> Host installs of Docker / Node 22 / pnpm / Python are still the user's responsibility; every MCP tool returns a copy-paste install plan when something is missing.
 
 ## Supported platforms
 
@@ -53,13 +61,14 @@ Security Gate is intended to work on **macOS**, **Windows 10/11**, and **Linux**
 ## Quick start (developers)
 
 1. Install Node.js **18.18+**. For detailed guidance, MCP workspace pitfalls, and smoke tests see **[`SETUP.md`](SETUP.md)**; for problems see **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)**.
-2. Install MCP dependencies:
+2. **Recommended:** from the repo root run **`npm run onboard`** (add `--dry-run` to preview). It installs MCP deps, attempts the local plugin symlink, and prints next steps. Spanish CLI copy: `npm run onboard -- --locale=es`.
+3. Or install MCP dependencies manually:
 
 ```bash
 cd mcp-server && npm install && cd ..
 ```
 
-3. Install the plugin locally for Cursor (**Confidence: Med** — plugin packaging evolves; verify in your Cursor version):
+4. Install the plugin locally for Cursor (**Confidence: Med** — plugin packaging evolves; verify in your Cursor version):
 
 **macOS / Linux** — create the plugins folder, then symlink from the **repo root**:
 
@@ -84,12 +93,14 @@ xcopy /E /I /Q security-gate-cursor "$env:USERPROFILE\.cursor\plugins\local\secu
 
 Local plugins directory (all OS): `~/.cursor/plugins/local/` on macOS/Linux, `%USERPROFILE%\.cursor\plugins\local\` on Windows.
 
-4. Restart Cursor (or **Developer: Reload Window**), then open **Settings → Cursor Settings → Plugins** and enable **Security Gate**.
+5. Restart Cursor (or **Developer: Reload Window**), then open **Settings → Cursor Settings → Plugins** and enable **Security Gate**.
 
-5. Ensure the MCP server is available:
+6. Ensure the MCP server is available:
 
 - This repo’s `.cursor-plugin/plugin.json` includes an `mcpServers.security-gate` entry using `"${workspaceFolder}/mcp-server/index.mjs"`.
 - If your Cursor build does not expand `${workspaceFolder}` for plugins, merge `examples/mcp.snippet.json` into your project’s MCP config and use **absolute paths**. See **`docs/TROUBLESHOOTING.md`** if tools are missing when you open another repo.
+
+**Optional CLI:** **`npm run report:export`** writes `.security-gate/reports/FINAL_SECURITY_REPORT_*.md` (handbrake + optional Semgrep + intel cache). **`npm run benchmark:demo`** compares raw Semgrep vs the bundled wrapper when a Semgrep engine is available.
 
 ## Demo targets (Docker “digital cage”)
 
@@ -107,17 +118,30 @@ Or on macOS/Linux with Bash:
 ./scripts/clone-demo-targets.sh
 ```
 
-**Easiest way to start demos (recommended):** picks **free host ports** automatically and prints URLs — no YAML, no manual port hunting:
+**Run demos one at a time** (intentional — each demo highlights a different layer of Security Gate). Each script picks a **free host port** and prints the URL:
 
 ```bash
-npm run demo:up
+# Webapp target (SQLi-style flow)
+npm run demo:webapp
+
+# Agent target (prompt-injection flow)
+npm run demo:agent
 ```
 
-Stop containers (keeps images):
+Stop one specific target without touching the other:
+
+```bash
+npm run demo:down -- webapp
+npm run demo:down -- agent
+```
+
+Stop everything (both, if both happen to be running):
 
 ```bash
 npm run demo:down
 ```
+
+`npm run demo:up` is a backward-compatible alias for `npm run demo:webapp`.
 
 Advanced (fixed defaults **23000** / **18501**, or your own ports):
 
@@ -148,6 +172,10 @@ docker compose down -v
 | `intel_refresh` | Downloads **CISA KEV** JSON and runs **OSV** queries for up to **`maxPackages`** npm names from the workspace **`package.json`** merged `dependencies` / `devDependencies` (default **8**, max **50**; **not** lockfile / PyPI / other ecosystems in MVP). Writes `.security-gate/cache/` (`kev.json`, `intel-meta.json`, `osv-samples.json`). |
 | `layer2_brief` | Markdown brief for Layer 2: **stack profile** + **shallow CISA KEV** summary (from `kev.json` / `intel-meta.json`, including `kev_error` when refresh failed) + **OSV rows** (from `osv-samples.json`). **MVP:** KEV is **not** auto-joined row-by-row with OSV results. |
 | `lab_bootstrap` | Detects **Docker** / **Python**, returns an OS-specific **install plan** when missing, and can **`docker compose`** an isolated **Semgrep + Crucible** lab (`docker-compose.lab.yml`) that bind-mounts your workspace. See `SETUP.md` (Scanner lab). |
+| `semgrep_scan` | Bundled **OSS Semgrep wrapper** (Community Edition). Actions: `status`, `scan_path`, `scan_text`. Resolves the engine in order: host `semgrep` binary → Docker fallback `semgrep/semgrep:latest`. Default ruleset `p/ci`. Bundled because Semgrep's official `semgrep mcp` subcommand requires the **Pro Engine** (paid) and the standalone `ghcr.io/semgrep/mcp` server was deprecated in v0.9.0 (only returns a `deprecation_notice` tool). Satisfies the workspace `semgrep_scan` rule out of the box. |
+| `deepsec_review` | Host-based wrapper for **DeepSec** (Vercel Labs, Tier-3 deep review). Actions: `status`, `install_plan`, `init`, `scan`, `report`. Requires **Node 22+**, **pnpm**, and one credential (`AI_GATEWAY_API_KEY` / `VERCEL_OIDC_TOKEN` / `ANTHROPIC_AUTH_TOKEN`). Never auto-runs scans; default `--limit` is **50** for calibration. |
+| `shannon_pentest` | Host-based wrapper for **Shannon** (KeygraphHQ, Tier-2 dynamic web/API pentest). Actions: `status`, `install_plan`, `setup`, `pentest` (gated; supports `dryRun`), `report`. Requires Docker, Node 18+, and Anthropic-compatible credentials (`ANTHROPIC_API_KEY`, or `ANTHROPIC_AUTH_TOKEN` + `ANTHROPIC_BASE_URL` for OpenRouter / Vercel AI Gateway proxies). Rejects production-looking target hostnames before spawning. |
+| `llamafirewall_advisor` | **Advisor** for **LlamaFirewall** (Meta, Tier-2.5 runtime defense). Actions: `status`, `install_plan`, `snippet`. Detects whether the workspace looks agentic (Python + LangChain / OpenAI / LlamaIndex / CrewAI hints) and whether `llamafirewall` is declared/importable, then returns a copy-paste Python integration. **Never installs or executes anything** — LlamaFirewall lives inside the user's agent process. |
 
 **Intel scope (explicit):** `intel_refresh` / `layer2_brief` use **public** CISA KEV + OSV data over the network; **no API keys** are required for that MVP path. **NVD** ingestion and **`NVD_API_KEY`** are **optional roadmap** extensions — the shipped `mcp-server` does **not** call the NVD API yet. See **`docs/ROADMAP.md`**, **`docs/API_KEY_ACQUISITION.md`**, and **`docs/TECHNICAL_DEEP_DIVE.md`** (NVD section).
 
@@ -162,6 +190,44 @@ docker compose -f docker-compose.lab.yml exec crucible-lab crucible --help
 
 Run these from the **plugin repo root** (where `docker-compose.lab.yml` lives). The MCP server logs a one-line lab probe to **stderr** on startup. These commands work in **macOS**, **Windows**, and **Linux** terminals as long as the Docker CLI is on `PATH`.
 
+**Docker vs API key** — `semgrep-lab` runs static-only (**no key required**); `crucible-lab` needs one LLM provider key (`OPENAI_API_KEY` / `ANTHROPIC_API_KEY` / `GROQ_API_KEY`) to perform real agentic attacks. See [`docs/CONFIGURATION_MAP.md`](docs/CONFIGURATION_MAP.md) §3.4.
+
+### DeepSec (Tier-3 deep review)
+
+DeepSec is wired through the host-based **`deepsec_review`** MCP tool (not in `docker-compose.lab.yml`, because DeepSec scaffolds into the workspace via `npx deepsec init` and is not distributed as a Docker image).
+
+Typical agent flow:
+
+1. `deepsec_review` `action=status` → detects Node 22+, pnpm, `.deepsec/` scaffold and credentials.
+2. `action=install_plan` → returns copy-paste commands for Node 22 / pnpm / AI Gateway key acquisition.
+3. `action=init` (once per workspace) → runs `npx --yes deepsec@latest init` and `pnpm install` in `.deepsec/`.
+4. `action=scan` (default `limit=50`) → executes `pnpm deepsec scan` + `pnpm deepsec process`. Requires one of `AI_GATEWAY_API_KEY` / `VERCEL_OIDC_TOKEN` / `ANTHROPIC_AUTH_TOKEN` in `.deepsec/.env.local` (or process env).
+5. `action=report` → exports markdown findings to `.deepsec/findings/`.
+
+DeepSec consumes Anthropic-class tokens; always calibrate with the default `limit=50` before raising. Cost ballpark per the DeepSec FAQ: ~$25–60 / 100 files at Opus defaults (verify against current pricing — **Confidence: Med**). The `.deepsec/` folder is already in this repo’s `.gitignore`.
+
+### Shannon (Tier-2 dynamic web/API pentest)
+
+**`shannon_pentest`** wraps `npx @keygraph/shannon` with safety preflight:
+
+1. `action=status` → detects Docker, Node 18+, Anthropic-compatible credentials, and classifies the `target_url`.
+2. `action=install_plan` → Docker + Node + Anthropic / OpenRouter / Vercel AI Gateway key acquisition.
+3. `action=setup` → runs `npx --yes @keygraph/shannon setup` once.
+4. `action=pentest target_url=... repo_path=...` → runs the autonomous pentest. **Refuses** production-looking hostnames (`*prod*`, `*production*`, `*.live`, `*.internal`, etc.) and missing credentials. Use `dryRun=true` to preview the planned command.
+5. `action=report` → lists files under `<workspace>/.shannon/`.
+
+Shannon is autonomous and expensive — always combine with a containerized disposable target (see `docker-compose.yml` demos) and a calibrated key. See [`docs/FREE_VS_PAID_LLM.md`](docs/FREE_VS_PAID_LLM.md) §3.2 for OpenRouter proxy wiring.
+
+### LlamaFirewall (Tier-2.5 runtime defense, advisor only)
+
+**`llamafirewall_advisor`** does not run LlamaFirewall — it tells you how to add it to your agent code:
+
+1. `action=status` → reports Python 3.10+ availability, agentic signals (LangChain, OpenAI, LlamaIndex, CrewAI hints), and whether `llamafirewall` is declared or importable.
+2. `action=install_plan` → Python 3.10+ + venv + `pip install "llamafirewall>=1.0.3,<2"`.
+3. `action=snippet` → returns a Python integration block (`PromptGuardScanner` + `CodeShieldScanner`) ready to paste at your agent entry point.
+
+LlamaFirewall's **core path is free** (local Hugging Face model downloads); paid scanners (`TOGETHER_API_KEY`, `FIREWORKS_API_KEY`) are optional.
+
 ## Production safety handbrake (behavior)
 
 When **`handbrake_scan`** detects production-like signals, it returns:
@@ -172,8 +238,17 @@ Signals include (non-exhaustive): `NODE_ENV=production`, `ENV`/`RAILS_ENV` produ
 
 **Shannon documentation** emphasizes disposable environments — treat that as a hard requirement for any dynamic demo.
 
+## Standards alignment (OWASP & ISO 27001)
+
+Security Gate maps **qualitatively** to OWASP Top 10 (2021), OWASP API Top 10 (2023), OWASP Top 10 for LLM Applications, OWASP Agentic AI, and ISO/IEC 27001:2022 **Annex A** controls. The full table — including **what is explicitly NOT covered** — lives in [`docs/STANDARDS_MAPPING.md`](docs/STANDARDS_MAPPING.md).
+
+This is **evidence support**, not certification or conformance. Use it as a starting point for in-house mapping with your security/compliance team.
+
 ## Documentation map
 
+- **Where to put every setting (paths + order):** [`docs/CONFIGURATION_MAP.md`](docs/CONFIGURATION_MAP.md)
+- **OWASP & ISO 27001 mapping (qualitative):** [`docs/STANDARDS_MAPPING.md`](docs/STANDARDS_MAPPING.md)
+- **Free vs paid LLM choices:** [`docs/FREE_VS_PAID_LLM.md`](docs/FREE_VS_PAID_LLM.md)
 - **Hackathon final report (Stage 3 bundle):** [`docs/HACKATHON_FINAL_REPORT.md`](docs/HACKATHON_FINAL_REPORT.md)
 - **Stage 1 (strategy + architecture):** [`docs/STAGE_01_STRATEGY_AND_ARCHITECTURE.md`](docs/STAGE_01_STRATEGY_AND_ARCHITECTURE.md)
 - **Stage 2 (technical design + costs):** [`docs/STAGE_02_TECHNICAL_DESIGN_AND_COSTS.md`](docs/STAGE_02_TECHNICAL_DESIGN_AND_COSTS.md)
@@ -187,11 +262,11 @@ Signals include (non-exhaustive): `NODE_ENV=production`, `ENV`/`RAILS_ENV` produ
 
 | Tool | Why it exists in the overall design |
 |------|-------------------------------------|
-| [Semgrep](https://semgrep.dev/docs) | Fast, local static analysis (Tier 1). |
-| [DeepSec](https://github.com/vercel-labs/deepsec) | Deep AI-assisted code review; cost-calibrate with vendor guidance. |
-| Shannon (Keygraph) | Dynamic web/API testing; must run in disposable environments. |
-| [Crucible](https://github.com/crucible-security/crucible) | OWASP Agentic Top 10 style testing for LLM/agent systems. |
-| LlamaFirewall (Meta) | Local guardrails for agent input/output safety. |
+| [Semgrep](https://semgrep.dev/docs) | Fast, local static analysis (Tier 1). Exposed through the bundled **`semgrep_scan`** MCP tool (host CE binary or Docker fallback) **and/or** the `semgrep-lab` Docker service. Note: the official `semgrep mcp` subcommand requires the proprietary Pro Engine (paid); the standalone OSS Docker image `ghcr.io/semgrep/mcp` is deprecated and only returns a `deprecation_notice`. See `docs/CONFIGURATION_MAP.md` §3.5. |
+| [DeepSec](https://github.com/vercel-labs/deepsec) | Deep AI-assisted code review (Tier 3). Integrated via the **`deepsec_review`** MCP tool; cost-calibrate with the `limit` argument. |
+| [Shannon](https://github.com/KeygraphHQ/shannon) | Dynamic web/API pentest (Tier 2). Integrated via the **`shannon_pentest`** MCP tool; only against disposable / containerized targets. |
+| [Crucible](https://github.com/crucible-security/crucible) | OWASP Agentic Top 10 style testing for LLM/agent systems. Run via `lab_bootstrap` `crucible-lab`. |
+| [LlamaFirewall](https://github.com/meta-llama/PurpleLlama/tree/main/LlamaFirewall) (Meta) | Runtime input/output guardrails for agentic apps (Tier 2.5). Wired via the **`llamafirewall_advisor`** MCP tool — install plan + copy-paste Python snippet. |
 | [NVD](https://nvd.nist.gov/) / [OSV](https://osv.dev/) / [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Free, ethical vulnerability intelligence sources. |
 
 **Friskit**: treat as a **reference concept** for “bundle security UX for non-experts” — not a dependency of this repo.

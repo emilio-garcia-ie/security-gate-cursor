@@ -1,6 +1,6 @@
 {
   "name": "security-gate-mcp",
-  "version": "0.1.1",
+  "version": "0.3.2",
   "private": true,
   "type": "module",
   "description": "MCP server for Security Gate: production handbrake, project profiling, and intel cache helpers.",
@@ -10,7 +10,12 @@
     "smoke": "node scripts/smoke.mjs",
     "smoke:prod": "node scripts/smoke-prod.mjs",
     "smoke:aux": "node scripts/smoke-aux.mjs",
-    "smoke:all": "node scripts/smoke.mjs && node scripts/smoke-prod.mjs && node scripts/smoke-aux.mjs",
+    "smoke:deepsec": "node scripts/smoke-deepsec.mjs",
+    "smoke:external": "node scripts/smoke-external.mjs",
+    "smoke:semgrep": "node scripts/smoke-semgrep.mjs",
+    "smoke:onboard": "node scripts/smoke-onboard.mjs",
+    "smoke:report": "node scripts/smoke-report.mjs",
+    "smoke:all": "node scripts/smoke.mjs && node scripts/smoke-prod.mjs && node scripts/smoke-aux.mjs && node scripts/smoke-deepsec.mjs && node scripts/smoke-external.mjs && node scripts/smoke-semgrep.mjs && node scripts/smoke-onboard.mjs && node scripts/smoke-report.mjs",
     "smoke:intel": "node scripts/smoke-intel-layer2.mjs"
   },
   "engines": {

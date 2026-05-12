@@ -158,7 +158,11 @@ async function main() {
     "project_profile",
     "intel_refresh",
     "layer2_brief",
-    "lab_bootstrap"
+    "lab_bootstrap",
+    "deepsec_review",
+    "shannon_pentest",
+    "llamafirewall_advisor",
+    "semgrep_scan"
   ];
   const missing = expectedTools.filter((n) => !toolNames.includes(n));
   if (!summary.initOk || missing.length || !summary.callOk || !summary.labCallOk || summary.labAction !== "install_plan") {

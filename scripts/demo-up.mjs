@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 /**
- * Start demo Docker targets with two free host ports (avoids "port already allocated"
- * for users who are not comfortable picking ports / env vars).
+ * Start ONE demo Docker target at a time on a free host port, then print its URL.
  *
- * Usage (from repo root): npm run demo:up
- * Tear down: npm run demo:down
+ * Usage (from repo root):
+ *   npm run demo:webapp   # start only webapp-target
+ *   npm run demo:agent    # start only agent-target
+ *   npm run demo:up       # backward-compatible alias for `demo:webapp`
+ *
+ * Tear down a single target:
+ *   npm run demo:down -- webapp
+ *   npm run demo:down -- agent
+ *   npm run demo:down            # stop all demo services
  */
 import { spawnSync } from "node:child_process";
 import { createServer } from "node:net";
@@ -13,6 +19,19 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
+
+const TARGETS = {
+  webapp: {
+    service: "webapp-target",
+    envVar: "SECURITY_GATE_WEBAPP_PORT",
+    label: "Web app"
+  },
+  agent: {
+    service: "agent-target",
+    envVar: "SECURITY_GATE_AGENT_PORT",
+    label: "Agent UI"
+  }
+};
 
 function pickFreePort() {
   return new Promise((resolve, reject) => {
@@ -50,34 +69,40 @@ function runDocker(args, extraEnv) {
   });
 }
 
+function parseTarget(argv) {
+  const fromEnv = process.env.DEMO_TARGET?.trim().toLowerCase();
+  const fromArg = (argv[2] || "").trim().toLowerCase();
+  const t = fromArg || fromEnv || "webapp";
+  if (!TARGETS[t]) {
+    console.error(
+      `Unknown demo target "${t}". Use one of: ${Object.keys(TARGETS).join(", ")}.`
+    );
+    process.exit(2);
+  }
+  return t;
+}
+
 async function main() {
-  const webPort = await pickFreePort();
-  let agentPort = await pickFreePort();
-  let guard = 0;
-  while (agentPort === webPort && guard++ < 10) {
-    agentPort = await pickFreePort();
-  }
-  if (agentPort === webPort) {
-    console.error("Could not allocate two distinct free ports.");
-    process.exit(1);
-  }
+  const key = parseTarget(process.argv);
+  const target = TARGETS[key];
 
-  const env = {
-    SECURITY_GATE_WEBAPP_PORT: String(webPort),
-    SECURITY_GATE_AGENT_PORT: String(agentPort)
-  };
+  const port = await pickFreePort();
+  const env = { [target.envVar]: String(port) };
 
-  console.log(`Using free host ports: webapp → ${webPort}, agent → ${agentPort}\n`);
+  console.log(
+    `Starting ONLY ${target.service} on free host port ${port}\n` +
+      `(env: ${target.envVar}=${port})\n`
+  );
 
-  const up = runDocker(["compose", "up", "-d", "webapp-target", "agent-target"], env);
+  const up = runDocker(["compose", "up", "-d", target.service], env);
   if (up.status !== 0) {
     process.exit(up.status ?? 1);
   }
 
   console.log("\n--- Open in your browser ---");
-  console.log(`  Web app:  http://127.0.0.1:${webPort}/`);
-  console.log(`  Agent UI: http://127.0.0.1:${agentPort}/`);
-  console.log("\nStop: npm run demo:down\n");
+  console.log(`  ${target.label}: http://127.0.0.1:${port}/`);
+  console.log(`\nStop only this target: npm run demo:down -- ${key}`);
+  console.log("Stop everything:       npm run demo:down\n");
 }
 
 main().catch((e) => {

@@ -77,15 +77,50 @@ NVD enrichment is intentionally **not** fully implemented in the MVP server to a
 
 ## Semgrep (Tier 1)
 
-This repo does not invoke Semgrep automatically (to avoid surprising users). Recommended invocation:
+This repo exposes Semgrep through the bundled MCP tool **`semgrep_scan`** (OSS, no Pro Engine):
+
+```jsonc
+// agent calls
+{ "name": "semgrep_scan", "arguments": { "action": "status" } }
+{ "name": "semgrep_scan", "arguments": { "action": "scan_path", "target_path": ".", "config": "p/owasp-top-ten" } }
+{ "name": "semgrep_scan", "arguments": { "action": "scan_text", "snippet": "<code>", "language": "python" } }
+```
+
+Manual host invocation (CLI, same engine):
 
 ```bash
-semgrep --config auto .
+semgrep scan --config p/ci --metrics=off .
 ```
+
+Why the wrapper exists: Semgrep's `semgrep mcp` subcommand requires the **proprietary Pro Engine** (paid AppSec Platform). The standalone OSS Docker image `ghcr.io/semgrep/mcp` was deprecated in v0.9.0 and now only exposes a `deprecation_notice` tool. Security Gate bundles a thin wrapper so the OSS path stays usable and satisfies the workspace `semgrep_scan` rule.
 
 **Docker lab (optional):** MCP tool **`lab_bootstrap`** can start **`semgrep-lab`** inside `docker-compose.lab.yml` so Semgrep runs in a container with the workspace bind-mounted (see `SETUP.md` → Scanner lab).
 
-## Shannon / Crucible (Tier 2)
+## Shannon — wired through `shannon_pentest`
+
+Shannon is an autonomous web/API pentester from KeygraphHQ (open-source Lite edition, AGPL-3.0). The MCP tool **`shannon_pentest`** wraps it with the same defensive pattern used for DeepSec:
+
+- `action=status` → detects Docker, Node 18+, Anthropic-compatible credentials, and classifies the target URL (host on local allowlist / suspicious / clearly production).
+- `action=install_plan` → returns OS-specific Docker + Node install commands plus the Anthropic / OpenRouter / Vercel AI Gateway credential options.
+- `action=setup` → runs `npx --yes @keygraph/shannon setup`.
+- `action=pentest target_url=... [repo_path=...] [dryRun=true]` → runs `npx --yes @keygraph/shannon start -u <target> -r <repo>`. **Refuses** production-looking hostnames (regex `/prod|production|live|admin|internal/`) and missing credentials. `dryRun` returns the planned command without spawning it.
+- `action=report` → lists files under `<workspace>/.shannon/` (best effort; check Shannon's vendor docs for the canonical layout).
+
+Credential modes:
+- Native: `ANTHROPIC_API_KEY`.
+- Proxy (free OpenRouter / Vercel AI Gateway): `ANTHROPIC_AUTH_TOKEN` + `ANTHROPIC_BASE_URL` (e.g. `https://openrouter.ai/api/v1`). See [`FREE_VS_PAID_LLM.md`](FREE_VS_PAID_LLM.md) §3.2.
+
+## LlamaFirewall — wired through `llamafirewall_advisor`
+
+LlamaFirewall is a Python **runtime** library that must live inside the user's agent process. Security Gate treats it as an **advisor**:
+
+- `action=status` → reads `requirements.txt` / `pyproject.toml` / `setup.cfg` for agentic hints (langchain / langgraph / openai / llama_index / crewai / autogen / smolagents / haystack / guidance / generic `llm`), then probes whether `llamafirewall` is declared or importable.
+- `action=install_plan` → Python 3.10+ install, venv creation, `pip install "llamafirewall>=1.0.3,<2"`. The first import downloads Meta's Prompt Guard 2 model from Hugging Face — flag this to the user.
+- `action=snippet` → returns a ready-to-paste Python block (`PromptGuardScanner` + `CodeShieldScanner`).
+
+The advisor never installs or executes anything. Pretending to "run LlamaFirewall" from outside the user's process would misrepresent how the library works.
+
+## Crucible (Tier 2 agentic)
 
 Never run these against production systems.
 
@@ -94,9 +129,17 @@ Operational requirements:
 - Shannon: follow vendor guidance — **disposable environment** + seed data.
 - Crucible: host install via `pip install crucible-security`, **or** the **`crucible-lab`** service from `docker-compose.lab.yml` (started by MCP **`lab_bootstrap`**). Always treat targets as disposable.
 
-## DeepSec (Tier 3)
+## DeepSec (Tier 3) — wired through `deepsec_review`
 
-Treat DeepSec as **deep review**, not “live exploitation”. Calibrate costs using vendor guidance (example: start with small limits / sampling).
+Treat DeepSec as **deep review**, not “live exploitation”. The MCP tool **`deepsec_review`** wraps the vendor CLI conservatively:
+
+- `action=status` → detects Node 22+, pnpm (via corepack), `.deepsec/` scaffold and credentials.
+- `action=install_plan` → returns OS-specific commands to install Node 22+, enable pnpm via `corepack`, and acquire one of `AI_GATEWAY_API_KEY` / `VERCEL_OIDC_TOKEN` / `ANTHROPIC_AUTH_TOKEN`.
+- `action=init` → runs `npx --yes deepsec@latest init` and `pnpm install` inside `.deepsec/`.
+- `action=scan` → executes `pnpm deepsec scan --limit <N>` (default **50**, max **500**) + `pnpm deepsec process`. **Never** auto-runs; the caller must pass `action=scan` explicitly. Refuses to start when no credential is detected.
+- `action=report` → exports markdown findings via `pnpm deepsec export --format md-dir --out ./findings`.
+
+Cost calibration is mandatory — DeepSec uses Anthropic-class models. Per the vendor FAQ, an Opus-default pass over ~100 files is roughly $25–60 (verify against current DeepSec pricing — **Confidence: Med**).
 
 ## Hooks
 
@@ -104,15 +147,15 @@ Treat DeepSec as **deep review**, not “live exploitation”. Calibrate costs u
 
 **Confidence: Med** — hook JSON schemas can vary by Cursor version. If a hook fails to load, remove the `hooks` section from `.cursor-plugin/plugin.json` temporarily and rely on MCP-only workflow.
 
-## ISO 27001 alignment (practical, not certification)
+## OWASP & ISO 27001 alignment (practical, not certification)
 
-This repo can generate **audit-friendly artifacts** if you:
+This repo can generate **review-friendly artifacts** if you:
 
 - store `intel_refresh` outputs under `.security-gate/cache/`
 - store `handbrake_scan` results in your ticket system
-- map findings to Annex A controls qualitatively (e.g., A.8.x technical vulnerabilities management)
+- ask the agent to tag each finding with **one** framework reference (OWASP Top 10 / API / LLM / Agentic, or ISO/IEC 27001:2022 Annex A control such as **A.8.8**, **A.8.25**, **A.8.28**, **A.8.29**, **A.8.31**)
 
-This is **evidence support**, not a compliance certification.
+The consolidated qualitative mapping lives in [`STANDARDS_MAPPING.md`](STANDARDS_MAPPING.md). This is **evidence support**, not a compliance certification.
 
 ## CI/CD suggestions
 

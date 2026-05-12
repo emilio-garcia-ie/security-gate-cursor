@@ -15,8 +15,10 @@ When asked to implement a feature that touches any of: authentication/authorizat
    - likelihood (qualitative)
    - mitigation
    - residual risk
+   - **framework hint** (optional but encouraged): OWASP Top 10 (e.g., `A03:2021 Injection`), OWASP API Top 10, OWASP LLM Top 10 (e.g., `LLM01 Prompt Injection`), OWASP Agentic AI, and/or ISO/IEC 27001:2022 Annex A control (e.g., `A.8.28 Secure coding`). Pick the **one most useful** reference per risk — do not over-tag.
 3. **If the repo uses Security Gate intel** (local cache under `.security-gate/cache/`: `kev.json` for CISA KEV, `osv-samples.json` for npm OSV), incorporate the most relevant notes for the detected stack. `layer2_brief` surfaces a **shallow KEV summary** plus OSV rows — it does **not** auto-join KEV to each OSV package in MVP. If no cache exists, say so explicitly—do not invent CVE IDs.
 4. **Define test cases** that would catch regressions (including abuse cases).
 5. Only then propose code changes.
+6. **Closing summary (when wrapping up a fix loop):** produce a short markdown report listing **resolved**, **still open**, and **out-of-scope / next steps** items, referencing the same framework hints. State explicitly what Security Gate does **not** cover (e.g., physical / organizational controls, full NVD enrichment).
 
-Keep the analysis concise but actionable. If the user is non-technical, translate jargon into plain language after the technical list.
+Keep the analysis concise but actionable. If the user is non-technical, translate jargon into plain language after the technical list. The full qualitative mapping lives in [`docs/STANDARDS_MAPPING.md`](../docs/STANDARDS_MAPPING.md) — link to it rather than re-explaining each framework.
