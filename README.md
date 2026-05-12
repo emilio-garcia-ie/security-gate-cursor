@@ -52,15 +52,14 @@ Security Gate is intended to work on **macOS**, **Windows 10/11**, and **Linux**
 
 ## Quick start (developers)
 
-1. Install Node.js **18.18+**.
-2. Follow **[`SETUP.md`](SETUP.md)** (install MCP deps, smoke tests, symlink plugin, MCP path pitfalls). If something fails, open **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)**.
-3. Install MCP dependencies:
+1. Install Node.js **18.18+**. For detailed guidance, MCP workspace pitfalls, and smoke tests see **[`SETUP.md`](SETUP.md)**; for problems see **[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)**.
+2. Install MCP dependencies:
 
 ```bash
 cd mcp-server && npm install && cd ..
 ```
 
-4. Install the plugin locally for Cursor (**Confidence: Med** — plugin packaging evolves; verify in your Cursor version):
+3. Install the plugin locally for Cursor (**Confidence: Med** — plugin packaging evolves; verify in your Cursor version):
 
 **macOS / Linux** — create the plugins folder, then symlink from the **repo root**:
 
@@ -85,9 +84,9 @@ xcopy /E /I /Q security-gate-cursor "$env:USERPROFILE\.cursor\plugins\local\secu
 
 Local plugins directory (all OS): `~/.cursor/plugins/local/` on macOS/Linux, `%USERPROFILE%\.cursor\plugins\local\` on Windows.
 
-5. Restart Cursor (or **Developer: Reload Window**), then open **Settings → Cursor Settings → Plugins** and enable **Security Gate**.
+4. Restart Cursor (or **Developer: Reload Window**), then open **Settings → Cursor Settings → Plugins** and enable **Security Gate**.
 
-6. Ensure the MCP server is available:
+5. Ensure the MCP server is available:
 
 - This repo’s `.cursor-plugin/plugin.json` includes an `mcpServers.security-gate` entry using `"${workspaceFolder}/mcp-server/index.mjs"`.
 - If your Cursor build does not expand `${workspaceFolder}` for plugins, merge `examples/mcp.snippet.json` into your project’s MCP config and use **absolute paths**. See **`docs/TROUBLESHOOTING.md`** if tools are missing when you open another repo.
