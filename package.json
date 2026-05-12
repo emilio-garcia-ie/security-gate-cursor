@@ -1,0 +1,12 @@
+{
+  "name": "security-gate-cursor",
+  "private": true,
+  "type": "module",
+  "description": "Security Gate Cursor plugin — root scripts only; MCP server lives in mcp-server/.",
+  "scripts": {
+    "clone-demo-targets": "node scripts/clone-demo-targets.mjs"
+  },
+  "engines": {
+    "node": ">=18.18"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "security-gate",
+  "displayName": "Security Gate",
+  "version": "0.1.1",
+  "description": "Three-layer security for Cursor: rules, evidence-grounded planning, and orchestrated scans with a mandatory production safety handbrake before dynamic testing.",
+  "author": {
+    "name": "Security Gate contributors"
+  },
+  "homepage": "https://github.com/emilio-garcia-ie/security-gate-cursor",
+  "repository": "https://github.com/emilio-garcia-ie/security-gate-cursor",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "cursor-plugin",
+    "owasp",
+    "semgrep",
+    "mcp",
+    "supply-chain"
+  ],
+  "category": "security",
+  "skills": "./skills/",
+  "rules": "./rules/",
+  "hooks": "./hooks/",
+  "mcpServers": {
+    "security-gate": {
+      "command": "node",
+      "args": ["${workspaceFolder}/mcp-server/index.mjs"]
+    }
+  }
+}

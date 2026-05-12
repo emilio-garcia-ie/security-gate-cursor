@@ -1,0 +1,9 @@
+node_modules/
+.security-gate/cache/
+.env
+.env.local
+*.log
+.DS_Store
+dist/
+demo/
+.cursor/

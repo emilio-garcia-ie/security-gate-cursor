@@ -1,0 +1,45 @@
+---
+description: Security-first coding defaults for application and agent code
+globs:
+  - "**/*.{ts,tsx,js,jsx,py,go,java,rb,php,cs}"
+alwaysApply: false
+---
+
+# Security Gate — Layer 1 (Rules)
+
+Follow these constraints unless explicitly overridden with a documented risk acceptance.
+
+## Secrets and credentials
+
+- Never commit secrets, API keys, tokens, or private keys. Use environment variables or a secret manager.
+- Do not log secrets, tokens, passwords, session identifiers, or full authentication headers.
+
+## Injection and unsafe composition
+
+- Prefer parameterized queries / prepared statements. Do not concatenate untrusted input into SQL, OS commands, LDAP, XPath, or NoSQL filters.
+- HTML-rendered output must be context-escaped or rendered via safe APIs/framework defaults. Avoid `dangerouslySetInnerHTML` unless strictly necessary and reviewed.
+- Avoid `eval`, dynamic `Function`, and runtime code execution on untrusted strings.
+
+## Web/API hardening (when applicable)
+
+- Enforce HTTPS in production configurations and document secure cookie flags (`Secure`, `HttpOnly`, `SameSite`) when setting cookies.
+- Validate and authorize every request. Treat IDs in URLs/bodies as untrusted unless proven otherwise.
+- Apply least privilege for service accounts and database roles.
+
+## Agents and LLM systems (when applicable)
+
+- Treat model inputs as untrusted. Separate system/developer/user content where the framework supports it.
+- Do not embed secrets in system prompts. Avoid giving tools access beyond the minimum required scope.
+- Assume prompt injection attempts are normal. Design workflows so a hijacked model cannot exfiltrate secrets or impersonate admins without additional controls.
+
+## Supply chain
+
+- Prefer pinned dependency versions in lockfiles. Avoid installing unknown packages or copying random install scripts.
+
+## Logging and integrity
+
+- Log security-relevant events without sensitive payloads. Prefer structured logs with stable fields for audit trails.
+
+## When unsure
+
+- Prefer safer defaults, explicit validation, and narrow interfaces. If a shortcut increases risk, call it out and propose a safer alternative.

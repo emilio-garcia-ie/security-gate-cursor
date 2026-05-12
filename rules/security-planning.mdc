@@ -1,0 +1,22 @@
+---
+description: Evidence-grounded security planning before implementing risky features
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+# Security Gate — Layer 2 (Planning)
+
+When asked to implement a feature that touches any of: authentication/authorization, data access, file/network IO, subprocess execution, deserialization, cryptography, HTML rendering, LLM tools/agents, or external integrations:
+
+1. **Restate the threat model in one paragraph** (assets, actors, trust boundaries).
+2. **List the top 5 security risks** for this specific change, each with:
+   - impact
+   - likelihood (qualitative)
+   - mitigation
+   - residual risk
+3. **If the repo uses Security Gate intel** (local cache under `.security-gate/cache/`: `kev.json` for CISA KEV, `osv-samples.json` for npm OSV), incorporate the most relevant notes for the detected stack. `layer2_brief` surfaces a **shallow KEV summary** plus OSV rows — it does **not** auto-join KEV to each OSV package in MVP. If no cache exists, say so explicitly—do not invent CVE IDs.
+4. **Define test cases** that would catch regressions (including abuse cases).
+5. Only then propose code changes.
+
+Keep the analysis concise but actionable. If the user is non-technical, translate jargon into plain language after the technical list.

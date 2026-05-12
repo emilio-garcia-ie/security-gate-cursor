@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "security-gate": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/security-gate-cursor/mcp-server/index.mjs"],
+      "env": {
+        "SECURITY_GATE_WORKSPACE": "/ABSOLUTE/PATH/TO/YOUR/APP/REPO"
+      }
+    }
+  }
+}

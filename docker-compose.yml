@@ -1,0 +1,24 @@
+# Security Gate — isolated demo targets ("digital cage")
+#
+# Before running (any OS — requires git on PATH):
+#   npm run clone-demo-targets
+#   # or on macOS/Linux with Bash:
+#   ./scripts/clone-demo-targets.sh
+#
+# Start one or both services:
+#   docker compose up -d webapp-target
+#   docker compose up -d agent-target
+#
+# Tear down:
+#   docker compose down -v
+
+services:
+  webapp-target:
+    build: ./demo/cursor-webinar-sec
+    ports:
+      - "3000:3000"
+
+  agent-target:
+    build: ./demo/damn-vulnerable-llm-agent
+    ports:
+      - "8501:8501"

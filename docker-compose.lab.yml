@@ -1,0 +1,46 @@
+# Security Gate — isolated scanner lab (Semgrep + Crucible CLI in Docker)
+#
+# The MCP tool `lab_bootstrap` sets LAB_WORKSPACE to an absolute bind-mount path.
+# Do not point LAB_WORKSPACE at production systems; use disposable workspaces only.
+#
+# macOS / Linux / Windows: LAB_WORKSPACE must be on a filesystem Docker is allowed to bind-mount
+# (on Windows, enable the drive in Docker Desktop → Settings → Resources → File sharing).
+#
+# Typical flow (after `lab_bootstrap` with action=start):
+#   docker compose -f docker-compose.lab.yml exec semgrep-lab semgrep --config auto /workspace
+#   docker compose -f docker-compose.lab.yml exec crucible-lab crucible --help
+#
+# Project name keeps stacks isolated from demo targets in docker-compose.yml.
+
+name: security-gate-lab
+
+services:
+  semgrep-lab:
+    image: semgrep/semgrep:latest
+    init: true
+    command: ["sleep", "infinity"]
+    working_dir: /workspace
+    volumes:
+      - type: bind
+        source: ${LAB_WORKSPACE}
+        target: /workspace
+    networks:
+      - lab
+
+  crucible-lab:
+    build:
+      context: ./docker/lab/crucible
+      dockerfile: Dockerfile
+    init: true
+    command: ["sleep", "infinity"]
+    working_dir: /workspace
+    volumes:
+      - type: bind
+        source: ${LAB_WORKSPACE}
+        target: /workspace
+    networks:
+      - lab
+
+networks:
+  lab:
+    driver: bridge
