@@ -472,7 +472,7 @@ server.tool(
 
 server.tool(
   "lab_bootstrap",
-  "One-click scanner lab: detects Docker/Python, returns an OS-specific install plan when missing, and can start/stop an isolated Docker Compose stack (semgrep-lab + crucible-lab) that bind-mounts the workspace. Does not auto-install privileged system software; use install_plan output in your terminal. Always run handbrake_scan before any live exploitation.",
+  "One-click scanner lab: detects Docker/Python, returns an OS-specific install plan when missing, and can start/stop an isolated Docker Compose stack (semgrep-lab + crucible-lab) that bind-mounts the workspace. Does not auto-install privileged system software; use install_plan output in your terminal. Always run handbrake_scan before any live exploitation. Post-MVP: stack-scaffold templates (Node/Python, etc.) keyed by project_profile — see docs/ROADMAP.md.",
   {
     action: z
       .enum(["status", "start", "stop", "install_plan"])

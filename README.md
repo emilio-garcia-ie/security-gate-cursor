@@ -107,7 +107,19 @@ Or on macOS/Linux with Bash:
 ./scripts/clone-demo-targets.sh
 ```
 
-Then:
+**Easiest way to start demos (recommended):** picks **free host ports** automatically and prints URLs — no YAML, no manual port hunting:
+
+```bash
+npm run demo:up
+```
+
+Stop containers (keeps images):
+
+```bash
+npm run demo:down
+```
+
+Advanced (fixed defaults **23000** / **18501**, or your own ports):
 
 ```bash
 docker compose up -d webapp-target
@@ -115,7 +127,13 @@ docker compose up -d webapp-target
 docker compose up -d agent-target
 ```
 
-Stop and delete volumes:
+**`webapp-target` note:** this Compose file builds a **standalone** static frontend. Default URL when using raw compose: **`http://localhost:23000`** (override with `SECURITY_GATE_WEBAPP_PORT`). The `/api/` routes return **503** here because the real **`backend`** service is only present when you run the **full** stack under `demo/cursor-webinar-sec/docker-compose.yaml`. The SPA UI should still load for demos that do not require a live API.
+
+**`agent-target` port:** default with raw compose: **`http://localhost:18501`**. Override: `SECURITY_GATE_AGENT_PORT`.
+
+**Shell tip:** YAML from `docker-compose.yml` (lines starting with `ports:`) is **not** a terminal command — only run shell commands like `docker compose …` or **`npm run demo:up`**. Changing ports when not using `demo:up` is done with **environment variables** (see header comments in `docker-compose.yml`).
+
+Delete containers **and** demo volumes when you are done:
 
 ```bash
 docker compose down -v
@@ -130,6 +148,8 @@ docker compose down -v
 | `intel_refresh` | Downloads **CISA KEV** JSON and runs **OSV** queries for up to **`maxPackages`** npm names from the workspace **`package.json`** merged `dependencies` / `devDependencies` (default **8**, max **50**; **not** lockfile / PyPI / other ecosystems in MVP). Writes `.security-gate/cache/` (`kev.json`, `intel-meta.json`, `osv-samples.json`). |
 | `layer2_brief` | Markdown brief for Layer 2: **stack profile** + **shallow CISA KEV** summary (from `kev.json` / `intel-meta.json`, including `kev_error` when refresh failed) + **OSV rows** (from `osv-samples.json`). **MVP:** KEV is **not** auto-joined row-by-row with OSV results. |
 | `lab_bootstrap` | Detects **Docker** / **Python**, returns an OS-specific **install plan** when missing, and can **`docker compose`** an isolated **Semgrep + Crucible** lab (`docker-compose.lab.yml`) that bind-mounts your workspace. See `SETUP.md` (Scanner lab). |
+
+**Intel scope (explicit):** `intel_refresh` / `layer2_brief` use **public** CISA KEV + OSV data over the network; **no API keys** are required for that MVP path. **NVD** ingestion and **`NVD_API_KEY`** are **optional roadmap** extensions — the shipped `mcp-server` does **not** call the NVD API yet. See **`docs/ROADMAP.md`**, **`docs/API_KEY_ACQUISITION.md`**, and **`docs/TECHNICAL_DEEP_DIVE.md`** (NVD section).
 
 ### Scanner lab (optional)
 

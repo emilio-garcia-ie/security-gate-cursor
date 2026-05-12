@@ -78,6 +78,31 @@ Layer 1/2 rules are **`.mdc` files** under the plugin’s `rules/` directory. Th
 
 ---
 
+## Docker demo: `port is already allocated`
+
+**First try:** from the Security Gate repo root run **`npm run demo:up`** — it picks **two free host ports** and prints `http://127.0.0.1:…` URLs (no YAML, no guessing). Stop with **`npm run demo:down`**.
+
+**Cause (raw `docker compose` only):** another process or container is already bound to the **host** port Compose wants.
+
+**Defaults (root `docker-compose.yml`) when you do not use `demo:up`:**
+
+| Service        | Default host → container | Override env var              |
+|----------------|--------------------------|-------------------------------|
+| `webapp-target` | `23000` → `80`           | `SECURITY_GATE_WEBAPP_PORT`   |
+| `agent-target`  | `18501` → `8501`         | `SECURITY_GATE_AGENT_PORT`    |
+
+```bash
+SECURITY_GATE_WEBAPP_PORT=3001 SECURITY_GATE_AGENT_PORT=8511 docker compose up -d webapp-target agent-target
+```
+
+Then open `http://localhost:3001` and `http://localhost:8511`. See **`README.md`** (Demo targets).
+
+**Do not paste YAML** (`ports:` / `- "23000:80"`) into your shell — those lines belong in `docker-compose.yml` only. Use **`npm run demo:up`** or **environment variables** to change published ports.
+
+**Note:** `demo:up` uses Node’s ephemeral bind to **probe** free ports, then passes them to Compose — URLs change each run. Raw compose defaults (**23000** / **18501**) stay predictable for advanced users.
+
+---
+
 ## Still stuck
 
 | Resource | Use for |

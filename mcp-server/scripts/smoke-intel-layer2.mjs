@@ -2,6 +2,10 @@
 /**
  * Manual regression: calls `intel_refresh` then `layer2_brief` over MCP stdio
  * in sequence (brief must see refreshed cache). Requires outbound HTTPS.
+ *
+ * Workspace: defaults to `demo/cursor-webinar-sec/frontend` when that package.json
+ * exists; otherwise repo root. Override with:
+ *   SECURITY_GATE_INTEL_WORKSPACE=/absolute/path/to/project npm run smoke:intel
  */
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -13,6 +17,8 @@ const SERVER = path.resolve(__dirname, "..", "index.mjs");
 const REPO = path.resolve(__dirname, "..", "..");
 
 function pickWorkspace() {
+  const override = process.env.SECURITY_GATE_INTEL_WORKSPACE?.trim();
+  if (override) return path.resolve(override);
   const fe = path.join(REPO, "demo", "cursor-webinar-sec", "frontend", "package.json");
   if (fs.existsSync(fe)) return path.dirname(fe);
   return REPO;

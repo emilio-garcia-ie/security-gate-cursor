@@ -62,7 +62,7 @@ All three sub-commands (`smoke`, `smoke:prod`, `smoke:aux`) must exit 0. This co
 - `looksLikeProdDbName` regressions (`myappprod`, `prod-db`, `mainDB`, `app_prod_v2` blocked; `staging-db`, `delivery-db` allowed)
 - `session-hint.mjs` hook behavior (neutral `{}` on stdout, hint on stderr)
 
-Optional (requires **outbound HTTPS**, slower): `npm run smoke:intel` runs **`intel_refresh`** then **`layer2_brief`** in order over MCP stdio (uses the demo frontend workspace when `demo/cursor-webinar-sec/frontend` exists).
+Optional (requires **outbound HTTPS**, slower): `npm run smoke:intel` runs **`intel_refresh`** then **`layer2_brief`** in order over MCP stdio (uses the demo frontend workspace when `demo/cursor-webinar-sec/frontend` exists). To target another folder: `SECURITY_GATE_INTEL_WORKSPACE=/abs/path/to/project npm run smoke:intel` from `mcp-server/`.
 
 Go back to the repo root when done:
 
@@ -131,6 +131,12 @@ From the **repo root**:
 
 ```bash
 npm run clone-demo-targets
+npm run demo:up
+```
+
+`demo:up` picks **two free TCP ports** on your machine, starts **both** demo containers, and prints **`http://127.0.0.1:…`** URLs (no manual port configuration). Stop with `npm run demo:down`. For fixed ports instead, see root `docker-compose.yml` header comments.
+
+```bash
 docker compose up -d webapp-target
 # or
 docker compose up -d agent-target
@@ -145,8 +151,7 @@ docker compose up -d agent-target
 > git clone https://github.com/ReversecLabs/damn-vulnerable-llm-agent demo/damn-vulnerable-llm-agent
 > ```
 
-- Web app: `http://localhost:3000`
-- Agent app: `http://localhost:8501`
+- Web app / agent URLs: printed by **`npm run demo:up`** (dynamic ports). With raw `docker compose` only: defaults `http://localhost:23000` and `http://localhost:18501` unless you set `SECURITY_GATE_WEBAPP_PORT` / `SECURITY_GATE_AGENT_PORT`.
 
 Tear down when done:
 

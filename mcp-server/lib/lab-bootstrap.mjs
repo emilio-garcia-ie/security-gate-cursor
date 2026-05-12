@@ -1,6 +1,11 @@
 /**
  * Scanner lab bootstrap: prerequisite detection + optional Docker Compose orchestration.
  * Does not install system Docker or Python (requires admin / user consent); returns copy-paste plans.
+ *
+ * Post-MVP extension (tracked in docs/ROADMAP.md — "Stack-scaffold templates + lab_bootstrap"):
+ * - Use `project_profile` / stack signals to pick curated compose templates (e.g. Node vs Python).
+ * - Optional `lab_bootstrap` actions or compose files per stack (beyond the single Semgrep+Crucible lab).
+ * - Keep handbrake_scan gating before any dynamic tier; disposable bind mounts only.
  */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";

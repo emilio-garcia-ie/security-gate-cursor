@@ -27,7 +27,7 @@ async function main() {
   const hint =
     "Security Gate active. Run MCP tool `handbrake_scan` before any live exploit testing. " +
     "For an isolated Semgrep/Crucible lab in Docker, run MCP tool `lab_bootstrap` (see SETUP.md). " +
-    "Use Docker for demo targets: `docker compose up -d webapp-target` / `agent-target`.";
+    "Demo targets: run `npm run demo:up` from the Security Gate repo (auto free ports + URLs). Raw compose defaults: web 23000, agent 18501; override SECURITY_GATE_WEBAPP_PORT / SECURITY_GATE_AGENT_PORT.";
 
   // Stderr is shown by Cursor when hooks emit diagnostics; it never corrupts
   // a JSON-RPC channel because hooks don't speak JSON-RPC on stdout.

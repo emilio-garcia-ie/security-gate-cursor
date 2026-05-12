@@ -9,16 +9,26 @@
 #   docker compose up -d webapp-target
 #   docker compose up -d agent-target
 #
+# Host ports (defaults avoid common clashes; override on any OS before `docker compose up`):
+#   SECURITY_GATE_WEBAPP_PORT — host port for nginx (container 80). Default 23000.
+#   SECURITY_GATE_AGENT_PORT  — host port for Streamlit (container 8501). Default 18501.
+# Examples (bash/zsh):  SECURITY_GATE_WEBAPP_PORT=3001 docker compose up -d webapp-target
+# Windows PowerShell:   $env:SECURITY_GATE_WEBAPP_PORT=3001; docker compose up -d webapp-target
+#
 # Tear down:
 #   docker compose down -v
 
 services:
   webapp-target:
-    build: ./demo/cursor-webinar-sec
+    # Standalone image: same Vite build as cursor-webinar-sec/frontend, nginx config without
+    # `backend` upstream (see `docker/webapp-target/nginx-standalone.conf`).
+    build:
+      context: .
+      dockerfile: docker/webapp-target/Dockerfile
     ports:
-      - "3000:3000"
+      - "${SECURITY_GATE_WEBAPP_PORT:-23000}:80"
 
   agent-target:
     build: ./demo/damn-vulnerable-llm-agent
     ports:
-      - "8501:8501"
+      - "${SECURITY_GATE_AGENT_PORT:-18501}:8501"
