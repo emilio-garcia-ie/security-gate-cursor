@@ -27,3 +27,4 @@ Security Gate is a Cursor IDE plugin with an MCP server. It is pure ESM JavaScri
 - **Docker, Semgrep, Shannon, DeepSec, LlamaFirewall** are all optional. The smoke tests handle their absence gracefully — they report `docker_available: false` or `engine: none` but still pass.
 - **`smoke:all` takes ~60 seconds** due to multiple sequential subprocess spawns.
 - The `.security-gate/` directory is created at runtime for cache/reports and is in `.gitignore`.
+- **Slack MCP** is available in Cursor but requires OAuth authentication via the Desktop IDE (Settings > MCP Servers). Cloud Agents cannot complete this flow — it must be done interactively by the user first.
