@@ -1,0 +1,91 @@
+---
+description: Supply chain security — dependency pinning, lockfile discipline, and CI install hygiene for any package manager (npm, pip, Go, Rust, Maven, NuGet, etc.)
+globs:
+  - "package.json"
+  - "package-lock.json"
+  - "yarn.lock"
+  - "pnpm-lock.yaml"
+  - "requirements*.txt"
+  - "pyproject.toml"
+  - "poetry.lock"
+  - "go.mod"
+  - "go.sum"
+  - "Cargo.toml"
+  - "Cargo.lock"
+  - "pom.xml"
+  - "build.gradle"
+  - "*.csproj"
+  - "packages.lock.json"
+alwaysApply: false
+---
+
+# Security Gate — Supply Chain (Layer 1)
+
+Apply these rules whenever dependency manifests, lockfiles, or CI install scripts are touched.
+References: OWASP A06:2021 Vulnerable and Outdated Components; ISO 27001:2022 A.8.8, A.8.30.
+
+## Version pinning
+
+- **Never** suggest floating ranges (`^`, `~`, `*`, `latest`, `>=`, `<`) for production dependencies.
+- **Always** suggest the exact latest stable version (e.g., `"lodash": "4.17.21"` not `"^4.17.21"`).
+- For dev dependencies, exact pinning is preferred; conservative patch-only ranges are tolerable but must be flagged.
+
+## Lockfile discipline
+
+- Lockfiles (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `poetry.lock`, `go.sum`, `Cargo.lock`, `packages.lock.json`) **must be committed**.
+- In CI/CD, always use the lockfile-respecting command:
+
+| Ecosystem | Correct CI command |
+|-----------|-------------------|
+| npm | `npm ci` |
+| yarn | `yarn install --frozen-lockfile` |
+| pnpm | `pnpm install --frozen-lockfile` |
+| pip / poetry | `poetry install --no-root --sync` |
+| pip (plain) | `pip install --no-deps -r requirements.txt` |
+| Go | `go build -mod=readonly` or `go mod download -json` (verify go.sum unchanged) |
+| Rust | `cargo fetch --locked && cargo test --locked` |
+| Maven | `maven-enforcer-plugin` with `requireReleaseVersion`; no SNAPSHOT in prod |
+| .NET | `dotnet restore --locked-mode` |
+
+## Install-time scripts
+
+- Before introducing a new dependency, remind the user to check for install-time hooks:
+  - npm: `postinstall`, `preinstall` scripts in `package.json`.
+  - Python: `setup.py` build scripts or `[build-system]` in `pyproject.toml`.
+  - Rust: `build.rs`.
+- Prefer `--ignore-scripts` (npm) only when the project's dependencies are compatible; otherwise audit hooks manually. **Never silently skip this check.**
+- Never suggest disabling SSL/TLS verification or checksum validation to speed up installs.
+
+## Cooldown (new or freshly updated packages)
+
+- When a dependency version was published fewer than 7 days ago, remind the user to apply a cooldown before using it in production (typosquatting and malicious update window). The user must verify the publication date; the AI cannot check the registry in real time.
+- For npm, run `npm audit signatures` (requires npm 9+ with npmjs.com) after install when available.
+
+## Assistant behavior when adding a dependency
+
+When the user asks to add or upgrade a dependency:
+
+1. Suggest the **exact latest stable version** — never `@latest`, `@next`, or a range.
+2. Provide the correct **exact-pinned** manifest entry and the **lockfile-respecting** install command.
+3. Remind the user to: verify the publication date (cooldown), check install-time scripts, and run the project's audit tool if one is configured.
+4. If the PR or diff adds a new dependency with an unusually large transitive closure, flag it and ask whether a lighter alternative exists.
+
+## When reviewing a manifest change
+
+Flag any of the following and explain why:
+
+- Floating version range introduced.
+- Lockfile deleted or not updated alongside manifest changes.
+- `--no-lockfile`, `--legacy-peer-deps` (without justification), or `--ignore-scripts` added to CI without a comment explaining the trade-off.
+- A dependency whose published version is very recent (check before merging).
+
+## Proactive SCA recommendations
+
+For production projects, suggest at least one SCA tool:
+- **npm**: `npm audit`, Socket.dev, or Snyk.
+- **Python**: `pip-audit`, Safety, or Snyk.
+- **Go**: `govulncheck`.
+- **Rust**: `cargo audit`.
+- **All**: Dependabot or Renovate configured with exact-version PRs and a cooldown window.
+
+For packages the user **publishes**: recommend provenance attestations (`npm publish --provenance`, PyPI trusted publishers, Maven GPG signing) and OIDC-based publishing from CI with short-lived tokens.

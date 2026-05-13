@@ -34,7 +34,7 @@ Follow these constraints unless explicitly overridden with a documented risk acc
 
 ## Supply chain
 
-- Prefer pinned dependency versions in lockfiles. Avoid installing unknown packages or copying random install scripts.
+Supply chain rules (version pinning, lockfile discipline, install-script audits, CI hygiene, SCA tools) live in [`supply-chain.mdc`](supply-chain.mdc) which activates on manifest and lockfile globs. Keep this file focused on code-level issues.
 
 ## Logging and integrity
 
