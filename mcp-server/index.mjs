@@ -283,7 +283,7 @@ async function layer2Brief(root, { featureSummary = "" } = {}) {
   return lines.join("\n");
 }
 
-const server = new McpServer({ name: "security-gate", version: "0.3.1" });
+const server = new McpServer({ name: "security-gate", version: "0.3.2" });
 
 server.tool(
   "handbrake_scan",

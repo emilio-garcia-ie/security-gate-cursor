@@ -291,6 +291,7 @@ git commit -m "Your message"
 |----------|--------|---------|
 | `SECURITY_GATE_WORKSPACE` | `~/.cursor/mcp.json` → `security-gate.env` | Default workspace root for tools when Cursor’s open folder is not `REPO` |
 | `SECURITY_GATE_INTEL_WORKSPACE` | shell only | `npm run smoke:intel` picks which folder OSV/KEV refresh uses |
+| `SECURITY_GATE_LOCALE` | shell / `.env` | Onboarding language: `en` (default) or `es` — same effect as `--locale=es` in `npm run onboard` |
 | `SECURITY_GATE_WEBAPP_PORT` / `SECURITY_GATE_AGENT_PORT` | shell only | Fixed host ports when **not** using `npm run demo:up` |
 
 ---
