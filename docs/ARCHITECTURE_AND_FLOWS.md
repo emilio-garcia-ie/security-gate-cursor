@@ -141,5 +141,5 @@ sequenceDiagram
 
 - [FAQ.md](FAQ.md) — short conceptual Q&A  
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — when MCP, Docker, or hooks fail  
-- [DEMO_SCRIPT.md](DEMO_SCRIPT.md) — staged demo narrative  
+- [README.md](../README.md) — demo targets (`npm run demo:webapp` / `demo:agent`) and clone scripts  
 - [API_KEY_ACQUISITION.md](API_KEY_ACQUISITION.md) — where to obtain keys safely  

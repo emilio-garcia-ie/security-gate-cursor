@@ -1,10 +1,10 @@
 # Security Gate — Technical Deep Dive (English)
 
-## Related staged documents
+## Related documentation
 
-- [`STAGE_01_STRATEGY_AND_ARCHITECTURE.md`](STAGE_01_STRATEGY_AND_ARCHITECTURE.md) — product thesis, architecture matrix, competitive framing  
-- [`STAGE_02_TECHNICAL_DESIGN_AND_COSTS.md`](STAGE_02_TECHNICAL_DESIGN_AND_COSTS.md) — coverage tables, costs, handbrake pseudocode, RAG design  
-- [`HACKATHON_FINAL_REPORT.md`](HACKATHON_FINAL_REPORT.md) — consolidated submission-style report
+- [`ARCHITECTURE_AND_FLOWS.md`](ARCHITECTURE_AND_FLOWS.md) — diagrams, tier flows, outputs by MCP tool  
+- [`CONFIGURATION_MAP.md`](CONFIGURATION_MAP.md) — where every config path and env var lives  
+- [`STANDARDS_MAPPING.md`](STANDARDS_MAPPING.md) — qualitative OWASP / ISO mapping  
 
 ## Portability (macOS / Windows / Linux)
 

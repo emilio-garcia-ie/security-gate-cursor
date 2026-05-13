@@ -88,7 +88,7 @@ If you have **Docker Desktop / Engine** working, run MCP tool **`lab_bootstrap`*
 
 ## 5) Demo apps (optional)
 
-If you are doing the hackathon demo, run from the repo root:
+To try the **bundled vulnerable demo apps** in Docker (“digital cage”), from the repo root:
 
 ```bash
 npm run clone-demo-targets
@@ -97,7 +97,9 @@ docker compose up -d webapp-target
 
 (On macOS/Linux you can use `./scripts/clone-demo-targets.sh` instead if you prefer Bash.)
 
-This keeps the risky app in a container (“digital cage”).
+Prefer **`npm run demo:webapp`** / **`npm run demo:agent`** for auto-picked ports — see the [README](../README.md) **Demo targets** section.
+
+This keeps the risky app in a container.
 
 ## 6) API keys (only if you use paid tools)
 
@@ -116,9 +118,4 @@ Start here:
 
 ## Need technical detail?
 
-Open [`TECHNICAL_DEEP_DIVE.md`](TECHNICAL_DEEP_DIVE.md).
-
-## Full picture (judges / teammates)
-
-- [`HACKATHON_FINAL_REPORT.md`](HACKATHON_FINAL_REPORT.md) — structured submission-style overview  
-- [`API_KEY_ACQUISITION.md`](API_KEY_ACQUISITION.md) — keys, costs, and where to click
+Open [`TECHNICAL_DEEP_DIVE.md`](TECHNICAL_DEEP_DIVE.md) and [`ARCHITECTURE_AND_FLOWS.md`](ARCHITECTURE_AND_FLOWS.md) for diagrams and outputs.

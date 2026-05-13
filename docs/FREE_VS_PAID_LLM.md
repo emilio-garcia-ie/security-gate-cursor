@@ -127,7 +127,7 @@ ollama pull qwen2.5-coder:7b   # better for code/security reasoning
 - Real $ usage; always calibrate with small `--limit` before broad runs.
 - Subscription / key management overhead.
 
-### Hybrid (recommended for hackathon / first-week demos)
+### Hybrid (recommended for first-week demos)
 
 | Tool | Recommended wiring |
 |------|--------------------|

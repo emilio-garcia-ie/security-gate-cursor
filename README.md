@@ -1,6 +1,6 @@
 # Security Gate (Cursor Plugin)
 
-Security Gate is a **hackathon-ready** Cursor plugin: **rules** before code, **evidence-grounded planning**, and an **MCP server** that coordinates Semgrep, intel feeds, optional labs, and Tier-2/3 tools — with a **production handbrake** so dynamic testing is never encouraged against production-like environments.
+Security Gate is an **open-source Cursor plugin** for safer development: **rules** before code, **evidence-grounded planning**, and an **MCP server** that coordinates Semgrep, intel feeds, optional labs, and Tier-2/3 tools — with a **production handbrake** so dynamic testing is never encouraged against production-like environments.
 
 ### Where to read next
 
@@ -329,14 +329,10 @@ This is **evidence support**, not certification or conformance. Use it as a star
 - **Where to put every setting (paths + order):** [`docs/CONFIGURATION_MAP.md`](docs/CONFIGURATION_MAP.md)
 - **OWASP & ISO 27001 mapping (qualitative):** [`docs/STANDARDS_MAPPING.md`](docs/STANDARDS_MAPPING.md)
 - **Free vs paid LLM choices:** [`docs/FREE_VS_PAID_LLM.md`](docs/FREE_VS_PAID_LLM.md)
-- **Hackathon final report (Stage 3 bundle):** [`docs/HACKATHON_FINAL_REPORT.md`](docs/HACKATHON_FINAL_REPORT.md)
-- **Stage 1 (strategy + architecture):** [`docs/STAGE_01_STRATEGY_AND_ARCHITECTURE.md`](docs/STAGE_01_STRATEGY_AND_ARCHITECTURE.md)
-- **Stage 2 (technical design + costs):** [`docs/STAGE_02_TECHNICAL_DESIGN_AND_COSTS.md`](docs/STAGE_02_TECHNICAL_DESIGN_AND_COSTS.md)
 - Vibecoders: [`docs/VIBECODER_QUICKSTART.md`](docs/VIBECODER_QUICKSTART.md)
 - Engineers: [`docs/TECHNICAL_DEEP_DIVE.md`](docs/TECHNICAL_DEEP_DIVE.md)
 - API keys: [`docs/API_KEY_ACQUISITION.md`](docs/API_KEY_ACQUISITION.md)
 - Roadmap: [`docs/ROADMAP.md`](docs/ROADMAP.md)
-- Hackathon demo script: [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md)
 
 ## Tool credits (short)
 
