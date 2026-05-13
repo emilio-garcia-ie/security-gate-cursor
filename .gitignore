@@ -10,8 +10,6 @@ demo/
 .security-gate/
 .deepsec/
 
-# Local-only docs (keep on your machine; not published to GitHub — see README / maintainer notes)
-docs/HACKATHON_FINAL_REPORT.md
-docs/DEMO_SCRIPT.md
-docs/STAGE_01_STRATEGY_AND_ARCHITECTURE.md
-docs/STAGE_02_TECHNICAL_DESIGN_AND_COSTS.md
+# Maintainer-only docs (everything under here except this README — see docs/_private/README.md)
+docs/_private/*
+!docs/_private/README.md
