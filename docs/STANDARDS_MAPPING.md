@@ -16,9 +16,9 @@ References (authoritative sources):
 
 **Security Gate helps with (today, MVP):**
 
-- Steering secure defaults **before** code is written (Layer 1 rules).
+- Steering secure defaults **before** code is written (Layer 1 rules: `rules/security.mdc`, `rules/supply-chain.mdc` for manifests/lockfiles, `rules/onboarding-and-keys.mdc`).
 - Forcing evidence-aware planning **before** risky edits (Layer 2 planning rule + `layer2_brief`).
-- Orchestrating safer dynamic testing only against **disposable** environments (Layer 3 MCP: `handbrake_scan`, `project_profile`, `intel_refresh`, `layer2_brief`, `lab_bootstrap`, `deepsec_review`, `shannon_pentest`, `llamafirewall_advisor`).
+- Orchestrating safer dynamic testing only against **disposable** environments (Layer 3 MCP: `handbrake_scan`, `project_profile`, `intel_refresh`, `layer2_brief`, `lab_bootstrap`, `semgrep_scan`, `deepsec_review`, `shannon_pentest`, `llamafirewall_advisor`).
 
 **Security Gate does *not*:**
 
@@ -102,9 +102,9 @@ This is positioning, not a checklist conformance.
 | **A.5.x Organizational policies** | `.cursor-plugin/plugin.json` + `rules/*.mdc` show codified security policy applied to AI-assisted development. |
 | **A.8.8 Management of technical vulnerabilities** | `intel_refresh` artefacts (`kev.json`, `osv-samples.json`, `intel-meta.json`) + linkage to KEV/OSV. |
 | **A.8.16 Monitoring activities** | Session-hint hook output, MCP JSON responses can be captured to logs/tickets. |
-| **A.8.25 Secure development life cycle** | Layer 1 rules + Layer 2 planning rule embed SDLC checks at the editor level. |
+| **A.8.25 Secure development life cycle** | Layer 1 rules (`security.mdc`, `supply-chain.mdc`) + Layer 2 planning rule embed SDLC checks at the editor level. |
 | **A.8.26 Application security requirements** | `rules/security-planning.mdc` requires threat-model + risk list before risky edits. |
-| **A.8.28 Secure coding** | `rules/security.mdc` (injection, secrets, AuthN, supply chain, logging). |
+| **A.8.28 Secure coding** | `rules/security.mdc` (injection, secrets, AuthN, logging) + `rules/supply-chain.mdc` (pinning, lockfiles, install-script hygiene, CI install commands). |
 | **A.8.29 Security testing** | Pre-flight `handbrake_scan`; `semgrep_scan` for code-level checks; `lab_bootstrap` for disposable Semgrep/Crucible runs. |
 | **A.8.31 Separation of environments** | `handbrake_scan` codifies the “no live tests in production-like envs” intent. |
 | **A.8.32 Change management** | MCP JSON outputs + brief markdowns become artefacts attached to PRs. |

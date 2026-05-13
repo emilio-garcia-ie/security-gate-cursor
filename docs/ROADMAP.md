@@ -2,7 +2,7 @@
 
 ## Shipped as of v0.3.2 (current)
 
-- Plugin manifest + rules + skill + hooks (`sessionStart` hint)
+- Plugin manifest + rules (`security.mdc`, `supply-chain.mdc`, `security-planning.mdc`, `onboarding-and-keys.mdc`) + skill + hooks (`sessionStart` hint)
 - MCP tools: `handbrake_scan`, `project_profile`, `intel_refresh`, `layer2_brief`, **`lab_bootstrap`** (OS-keyed install plan + isolated `docker-compose.lab.yml` stack: Semgrep + Crucible CLI image), **`deepsec_review`** (host wrapper for Vercel Labs DeepSec — Tier-3 deep review with safe `--limit` defaults and explicit credential gating), **`shannon_pentest`** (host wrapper for KeygraphHQ Shannon — Tier-2 dynamic web/API pentest with target classification + Anthropic-compatible proxy support), **`llamafirewall_advisor`** (read-only advisor for Meta LlamaFirewall — detection + install plan + Python integration snippet), **`semgrep_scan`** (bundled OSS Semgrep wrapper — host CE binary first, Docker `semgrep/semgrep:latest` fallback; satisfies the workspace `semgrep_scan` rule without Pro Engine)
 - Standards mapping doc (`docs/STANDARDS_MAPPING.md`) covering OWASP Top 10 (web/API/LLM/Agentic) and ISO/IEC 27001:2022 Annex A — qualitative, not certification
 - Free-vs-paid LLM matrix (`docs/FREE_VS_PAID_LLM.md`) with Ollama / Gemini / OpenRouter free / Groq free / Anthropic paid trade-offs, including OpenRouter Anthropic-compatible wiring for Shannon and DeepSec

@@ -243,14 +243,14 @@ Here is a concise checklist you can share with users:
    - **Layer 1 rules** (`.mdc`) when they apply to edits in that workspace.
    - **Layer 2 rules** (`.mdc`) when planning risky features.
    - **`sessionStart` hook** (when Cursor loads the hook from the enabled plugin).
-   - **MCP tools** (`handbrake_scan`, `project_profile`, `intel_refresh`, `layer2_brief`, `lab_bootstrap`, `deepsec_review`, `shannon_pentest`, `llamafirewall_advisor`) when the MCP server started from step 7 (or from opening this repo with the default manifest).
+   - **MCP tools** (`handbrake_scan`, `project_profile`, `intel_refresh`, `layer2_brief`, `lab_bootstrap`, `semgrep_scan`, `deepsec_review`, `shannon_pentest`, `llamafirewall_advisor`) when the MCP server started from step 7 (or from opening this repo with the default manifest).
 
 ### What the plugin does automatically (no further action needed)
 
 | Feature | How it works |
 |---------|-------------|
-| **Layer 1 rules** (`.mdc`) | Applied automatically to every file edit in any open workspace. |
-| **Layer 2 rules** (`.mdc`) | Triggered when the agent is planning a feature flagged as risky. |
+| **Layer 1 rules** (`.mdc`) | Applied when Cursor loads the plugin and each rule’s **`globs`** / **`alwaysApply`** matches the open file (e.g. `rules/security.mdc` for common source extensions; `rules/supply-chain.mdc` for manifests and lockfiles; `rules/onboarding-and-keys.mdc` is `alwaysApply`). |
+| **Layer 2 planning rule** (`rules/security-planning.mdc`) | Same mechanism: matches `**/*` via globs when the agent is working on files in scope — use it for evidence-grounded planning before risky changes. |
 | **Session hint hook** | Fires once per new session with a short tip. |
 | **`handbrake_scan`** | Scans merged env vars (process + `.env*` files) — no config needed. |
 | **`project_profile`** | Reads `package.json`, `requirements.txt`, `pyproject.toml`, `go.mod`, `Gemfile` in the workspace root. |

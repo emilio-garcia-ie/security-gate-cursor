@@ -35,7 +35,7 @@ flowchart TB
 
 | Layer | What it is | Runs without API keys? |
 |-------|------------|---------------------------|
-| 1 | `.mdc` rules + [`skills/security-gate/SKILL.md`](../skills/security-gate/SKILL.md) | Yes |
+| 1 | `.mdc` rules (code + manifests/lockfiles) + [`skills/security-gate/SKILL.md`](../skills/security-gate/SKILL.md) | Yes |
 | 2 | Planning rule + optional **KEV/OSV** context | Yes for `layer2_brief` reading cache; `intel_refresh` needs outbound HTTPS, not vendor LLM keys |
 | 3 | MCP server: profile, intel, Semgrep wrapper, lab, Tier-2/3 wrappers | **Tier 1 tools:** yes. **Shannon / Crucible / DeepSec scans:** need LLM credentials when those actions run |
 

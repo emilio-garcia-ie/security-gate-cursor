@@ -105,7 +105,7 @@ Plugin hooks from Security Gate are declared in **`REPO/hooks/hooks.json`** (loa
 ```text
 REPO/
 ├── .cursor-plugin/plugin.json     ← plugin manifest (MCP, rules paths)
-├── rules/                         ← Layer 1 / planning rules (.mdc)
+├── rules/                         ← Cursor rules (.mdc): security, supply-chain, planning, onboarding
 ├── skills/                        ← bundled skills
 ├── hooks/hooks.json               ← sessionStart → session-hint.mjs
 ├── mcp-server/                    ← Node MCP (npm install here)
@@ -114,9 +114,13 @@ REPO/
 ├── docker-compose.yml             ← demo targets (webapp + agent)
 ├── docker/webapp-target/          ← standalone web Dockerfile + nginx
 ├── scripts/
+│   ├── onboard.mjs
 │   ├── clone-demo-targets.mjs
+│   ├── clone-demo-targets.sh
 │   ├── demo-up.mjs                ← picks free ports + prints URLs
-│   └── demo-down.mjs
+│   ├── demo-down.mjs
+│   ├── export-final-report.mjs
+│   └── benchmark-demo.mjs
 ├── demo/                          ← cloned demos (gitignored in this template)
 │   ├── cursor-webinar-sec/
 │   └── damn-vulnerable-llm-agent/   (+ Dockerfile patch for Debian)

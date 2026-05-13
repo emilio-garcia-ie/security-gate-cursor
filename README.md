@@ -35,7 +35,7 @@ flowchart TB
   HB --> TO
 ```
 
-- **Layer 1 — Rules:** `.mdc` rules steer secure defaults *before* code is written.  
+- **Layer 1 — Rules:** `.mdc` rules steer secure defaults *before* code is written — secure coding (`rules/security.mdc`), dependency and lockfile discipline (`rules/supply-chain.mdc`), plus onboarding hints (`rules/onboarding-and-keys.mdc`).  
 - **Layer 2 — Planning:** an evidence-first planning rule plus **`intel_refresh`** / **`layer2_brief`** (KEV/OSV cache when populated).  
 - **Layer 3 — Orchestration:** MCP tools — **`handbrake_scan`**, **`project_profile`**, **`intel_refresh`**, **`layer2_brief`**, **`lab_bootstrap`**, **`semgrep_scan`**, **`deepsec_review`**, **`shannon_pentest`**, **`llamafirewall_advisor`** — designed to **block dynamic testing** when production-like signals appear.
 

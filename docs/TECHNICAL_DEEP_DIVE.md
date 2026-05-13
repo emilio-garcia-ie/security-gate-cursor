@@ -14,7 +14,7 @@ The MCP server and smoke harness are **Node-only** and use `path.join` / `path.r
 
 This plugin intentionally combines:
 
-- **Rules** in `rules/` (Layer 1)
+- **Rules** in `rules/`: `security.mdc` (secure coding defaults), `supply-chain.mdc` (manifests and lockfiles), `security-planning.mdc` (evidence-grounded planning), `onboarding-and-keys.mdc` (onboarding + locale hints)
 - **Skills** in `skills/` (operational guidance for agents)
 - **Hooks** in `hooks/` (lightweight session hints)
 - **MCP** in `mcp-server/` (Layer 3 orchestration primitives)

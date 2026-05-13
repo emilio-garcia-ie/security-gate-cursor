@@ -9,7 +9,7 @@ description: Run Security Gate workflows (handbrake, profiling, intel refresh, L
 
 Security Gate implements a **three-layer** model:
 
-1. **Layer 1 — Rules**: `.mdc` rules under `rules/` steer secure defaults before code is written.
+1. **Layer 1 — Rules**: `.mdc` rules under `rules/` steer secure defaults before code is written (`security.mdc` for typical source files; `supply-chain.mdc` when manifests or lockfiles are in scope; `onboarding-and-keys.mdc` for setup/locale guidance).
 2. **Layer 2 — Planning**: `rules/security-planning.mdc` forces evidence-grounded risk analysis before risky edits.
 3. **Layer 3 — Orchestration**: the `security-gate` MCP server coordinates external tooling and **blocks dynamic testing** when a production-like environment is detected.
 

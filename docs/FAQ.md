@@ -6,13 +6,13 @@ Short answers for **what this is and why it works this way**. If your MCP fails 
 
 ## What is Security Gate in one sentence?
 
-A **Cursor plugin** bundle: **rules** (secure defaults), a **planning** rule (evidence-first), and an **MCP server** that coordinates scanners and **blocks dynamic testing** when the workspace looks production-like.
+A **Cursor plugin** bundle: **rules** (secure coding + dependency manifests), a **planning** rule (evidence-first), and an **MCP server** that coordinates scanners and **blocks dynamic testing** when the workspace looks production-like.
 
 ---
 
 ## What are the “three layers”?
 
-1. **Layer 1 — Rules:** `.mdc` files nudge the agent toward safer patterns before code is written.  
+1. **Layer 1 — Rules:** `.mdc` files nudge the agent toward safer patterns before code is written (including **`rules/supply-chain.mdc`** when you touch manifests or lockfiles).  
 2. **Layer 2 — Planning:** a planning rule asks for risks **grounded** in project signals and (when refreshed) **KEV/OSV** cache.  
 3. **Layer 3 — Orchestration:** MCP tools run Semgrep, refresh intel, bootstrap a lab, or call Shannon/DeepSec — with **`handbrake_scan`** gating the dangerous paths.
 

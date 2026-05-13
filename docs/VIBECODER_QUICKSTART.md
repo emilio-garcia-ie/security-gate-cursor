@@ -103,7 +103,7 @@ This keeps the risky app in a container.
 
 ## 6) API keys (only if you use paid tools)
 
-If you later connect Shannon / Crucible / **DeepSec via `deepsec_review`** / optional scanners, you will need API keys. Security Gate's core flow (Layer 1 rules, `intel_refresh`, `layer2_brief`, `handbrake_scan`, `lab_bootstrap` Semgrep service) does **not** require any key.
+If you later connect Shannon / Crucible / **DeepSec via `deepsec_review`** / optional scanners, you will need API keys. Security Gate's core flow (Layer 1 rules, `project_profile`, `intel_refresh`, `layer2_brief`, **`semgrep_scan`**, `handbrake_scan`, `lab_bootstrap`'s `semgrep-lab`) does **not** require any key.
 
 Start here:
 

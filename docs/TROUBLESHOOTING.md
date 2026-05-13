@@ -144,7 +144,7 @@ The advisor never installs or executes anything — it only reads and recommends
 
 ## Rules never show up
 
-Layer 1/2 rules are **`.mdc` files** under the plugin’s `rules/` directory. They apply when Cursor loads the plugin and the rule’s `globs` / `alwaysApply` match the editor context. If you only installed MCP manually but did not install/enable the **plugin**, rules bundled in the plugin will not attach.
+Layer 1/2 rules are **`.mdc` files** under the plugin’s `rules/` directory (`security.mdc`, `supply-chain.mdc`, `security-planning.mdc`, `onboarding-and-keys.mdc`). They apply when Cursor loads the plugin and the rule’s `globs` / `alwaysApply` match the editor context. If you only installed MCP manually but did not install/enable the **plugin**, rules bundled in the plugin will not attach.
 
 ---
 
