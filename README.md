@@ -326,6 +326,7 @@ This is **evidence support**, not certification or conformance. Use it as a star
 - **Architecture, diagrams, outputs:** [`docs/ARCHITECTURE_AND_FLOWS.md`](docs/ARCHITECTURE_AND_FLOWS.md)
 - **Conceptual FAQ:** [`docs/FAQ.md`](docs/FAQ.md)
 - **Optional first-party images:** [`docs/assets/README.md`](docs/assets/README.md)
+- **Maintainer-only drafts (not on GitHub):** folder `docs/_private/` — see [`docs/_private/README.md`](docs/_private/README.md)
 - **Where to put every setting (paths + order):** [`docs/CONFIGURATION_MAP.md`](docs/CONFIGURATION_MAP.md)
 - **OWASP & ISO 27001 mapping (qualitative):** [`docs/STANDARDS_MAPPING.md`](docs/STANDARDS_MAPPING.md)
 - **Free vs paid LLM choices:** [`docs/FREE_VS_PAID_LLM.md`](docs/FREE_VS_PAID_LLM.md)
